@@ -1,7 +1,7 @@
 import resources.main_ui as main_ui
 from data_entry import DataEntry
 from input_menu import InputMenuDialog
-from plot_building.plot_building import *
+from plot_building.matplotlib_plot_builder import *
 
 import sys
 from PyQt5 import QtWidgets
@@ -30,7 +30,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             "lowest depth": DataEntry("Lowest depth", 8.0, "m", True),
             "time step": DataEntry("Time step", 0.5, "s", True),
             "number of time steps": DataEntry("Number of time steps", 20, ""),
-            "number of steps between surface output": DataEntry("Number of steps\nbetween surface output", 10, "")
+            "number of steps between surface output": DataEntry("Number of steps\nbetween surface output", 4, "")
         }
 
         self.input_menus_elements = {
@@ -66,6 +66,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.koryto = np.loadtxt("MOST\\koryto_profile.txt")
         self.koryto2d = np.transpose(np.tile(self.koryto, (1500, 1)))
 
+        self.koryto_plot = PlotBuilder("imshow", self.koryto2d)
+
         self.marigram_points = []
 
         self.calculated = False
@@ -74,7 +76,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self._complete_ui()
 
     def _complete_ui(self):
-        self.setCentralWidget(get_plot_widget("imshow", self.koryto2d))
+        self.setCentralWidget(self.koryto_plot.get_widget())
 
         self.action_size.triggered.connect(
             lambda: self._open_input_menu(self.input_menus_elements["size"]))
@@ -87,12 +89,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_calculate.triggered.connect(self._calculate)
 
         self.action_show_area.triggered.connect(
-            lambda: self.setCentralWidget(get_plot_widget("imshow", self.koryto2d))
-        )
-
-        self.menu_visualisation.triggered.connect(
-            lambda: print("visualisation!")
-        )
+            lambda: self.setCentralWidget(self.koryto_plot.get_widget()))
 
         self.action_select_points.triggered.connect(self._select_marigram_points)
         self.action_marigrams.triggered.connect(self._plot_marigrams)
@@ -122,7 +119,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.process = QProcess()
         self.process.setWorkingDirectory('MOST\\')
         self.process.readyReadStandardOutput.connect(self._update_progress)
-        self.process.finished.connect(self._show_result)
+        self.process.finished.connect(self._load_and_show_result)
         self.process.start(commands)
 
     def _update_progress(self):
@@ -155,7 +152,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.setCentralWidget(container)
 
-    def _show_result(self):
+    def _load_and_show_result(self):
         # print("finished")
         self.max_height = np.loadtxt("MOST\\maxheigh.dat")
         self.height = np.loadtxt("MOST\\heigh.dat")
@@ -167,95 +164,52 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_heatmap_with_contour.setEnabled(True)
         self.action_shore_bar_chart.setEnabled(True)
 
+        self.heatmap_plot = PlotBuilder("imshow", self.max_height)
+        self.heatmap_3d_plot = PlotBuilder("3d", self.max_height)
+        self.heatmap_with_contour_plot = PlotBuilder("contour", self.max_height)
+        self.shore_bar_chart_plot = PlotBuilder("bar", self.max_height[750])
+
         if self.marigram_points:
             self.action_marigrams.setEnabled(True)
 
         self.action_heatmap.triggered.connect(
-            lambda: self.setCentralWidget(get_plot_widget("imshow", self.max_height))
+            lambda: self.setCentralWidget(self.heatmap_plot.get_widget())
         )
         self.action_3d_heatmap.triggered.connect(
-            lambda: self.setCentralWidget(get_plot_widget("3d", self.max_height))
+            lambda: self.setCentralWidget(self.heatmap_3d_plot.get_widget())
         )
         self.action_heatmap_with_contour.triggered.connect(
-            lambda: self.setCentralWidget(get_plot_widget("contour", self.max_height))
+            lambda: self.setCentralWidget(self.heatmap_with_contour_plot.get_widget())
         )
         self.action_shore_bar_chart.triggered.connect(
-            lambda: self.setCentralWidget(get_plot_widget("bar", self.max_height[750]))
+            lambda: self.setCentralWidget(self.shore_bar_chart_plot.get_widget())
         )
 
-        self.setCentralWidget(get_plot_widget("imshow", self.max_height))
+        self.setCentralWidget(self.heatmap_plot.get_widget())
 
     def _select_marigram_points(self):
-        figure = plt.Figure()
-        canvas = FigureCanvas(figure)
-        axes = figure.add_subplot(111)
-        axes.imshow(self.koryto2d)
-
-        toolbar = NavigationToolbar(canvas)
-
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(toolbar)
-        layout.addWidget(canvas)
-
-        container = QtWidgets.QWidget()
-        container.setLayout(layout)
-
-        self.setCentralWidget(container)
-
-        print("MARIGRAMS!")
-
-        self.marigram_points = figure.ginput(n=-1, timeout=-1, show_clicks=True,
-                                             mouse_stop=MouseButton.RIGHT,
-                                             mouse_pop=MouseButton.MIDDLE)
-        print(self.marigram_points)
-        self._draw_marigram_points(self.marigram_points)
+        self.setCentralWidget(self.koryto_plot.get_widget())
+        self.marigram_points = self.koryto_plot.get_input_points()
+        self.koryto_plot.draw_points(self.marigram_points)
 
         if self.calculated:
             self.action_marigrams.setEnabled(True)
 
-    def _draw_marigram_points(self, points):
-        figure = plt.Figure()
-        axes = figure.add_subplot(111)
-        axes.imshow(self.koryto2d)
-
-        for p in points:
-            axes.scatter(x=p[0], y=p[1], marker="+", c="blue")
-
-        widget = make_widget_with_toolbar(figure)
-        self.setCentralWidget(widget)
-
     def _plot_marigrams(self):
+        plot_data = []
         n_marigrams = len(self.marigram_points)
-
-        figure = plt.Figure()
-
         length = len(self.height)
-        print(length)
-        axes = figure.subplots(n_marigrams)
 
         for i in range(n_marigrams):
             point = self.marigram_points[i]
-            if n_marigrams == 1:
-                curr_ax = axes
-            else:
-                curr_ax = axes[i]
             start_y = int(point[1])
             if start_y == 900:
                 start_y = 899
             selected = self.height[[y for y in range(start_y, length, 900)], int(point[0])]
-            print(selected)
-            print(selected[2:])
-            curr_ax.plot(selected)
-            curr_ax.set_title("x = {}, y = {}".format(int(point[0]), int(point[1])), x=1.1, y=0)
-            curr_ax.set_ylim([-1, 1])
-            curr_ax.label_outer()
-            curr_ax.spines['top'].set_visible(False)
-            curr_ax.spines['bottom'].set_visible(False)
-            curr_ax.spines['right'].set_visible(False)
+            plot_data.append([point[0], point[1]] + selected.tolist())
 
-        figure.subplots_adjust(right=0.83)
-
-        self.setCentralWidget(make_widget_with_toolbar(figure))
+        self.marigrams_plot = PlotBuilder("marigrams", plot_data)
+        self.setCentralWidget(self.marigrams_plot.get_widget())
 
 
 if __name__ == '__main__':
