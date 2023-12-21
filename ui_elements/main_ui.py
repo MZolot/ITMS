@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'main_window.ui'
+# Form implementation generated from reading ui file '.\main_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -64,9 +64,16 @@ class Ui_MainWindow(object):
         self.actionArea.setObjectName("actionArea")
         self.action_show_area = QtWidgets.QAction(MainWindow)
         self.action_show_area.setObjectName("action_show_area")
+        self.action_heatmap_contour = QtWidgets.QAction(MainWindow)
+        self.action_heatmap_contour.setEnabled(False)
+        font = QtGui.QFont()
+        self.action_heatmap_contour.setFont(font)
+        self.action_heatmap_contour.setObjectName("action_heatmap_contour")
         self.action_heatmap_with_contour = QtWidgets.QAction(MainWindow)
         self.action_heatmap_with_contour.setEnabled(False)
         self.action_heatmap_with_contour.setObjectName("action_heatmap_with_contour")
+        self.action_load_existing_results = QtWidgets.QAction(MainWindow)
+        self.action_load_existing_results.setObjectName("action_load_existing_results")
         self.menu_area.addAction(self.action_size)
         self.menu_area.addAction(self.action_steps)
         self.menu_area.addSeparator()
@@ -75,6 +82,8 @@ class Ui_MainWindow(object):
         self.menu_marigrams.addAction(self.action_select_points)
         self.menu_calculations.addAction(self.action_calculation_parameters)
         self.menu_calculations.addAction(self.action_calculate)
+        self.menu_calculations.addSeparator()
+        self.menu_calculations.addAction(self.action_load_existing_results)
         self.menu_visualisation.addAction(self.action_heatmap)
         self.menu_visualisation.addAction(self.action_heatmap_with_contour)
         self.menu_visualisation.addAction(self.action_3d_heatmap)
@@ -110,4 +119,6 @@ class Ui_MainWindow(object):
         self.action_calculation_parameters.setText(_translate("MainWindow", "Change calculation parameters..."))
         self.actionArea.setText(_translate("MainWindow", "Area"))
         self.action_show_area.setText(_translate("MainWindow", "Show Area"))
+        self.action_heatmap_contour.setText(_translate("MainWindow", "Heatmap with contour lines"))
         self.action_heatmap_with_contour.setText(_translate("MainWindow", "Heatmap with contour lines"))
+        self.action_load_existing_results.setText(_translate("MainWindow", "Load existing results"))

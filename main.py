@@ -1,6 +1,6 @@
-import resources.main_ui as main_ui
+import ui_elements.main_ui as main_ui
 from data_entry import DataEntry
-from input_menu import InputMenuDialog
+from ui_elements.input_menu import *
 from plot_building.matplotlib_plot_builder import *
 
 import sys
@@ -8,8 +8,11 @@ from PyQt5 import QtWidgets
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import QProcess, Qt
 
-from matplotlib.backend_bases import MouseButton
 import numpy as np
+
+
+height_file_name = "MOST/extras/heigh_long.dat"
+max_height_file_name = "MOST/extras/maxheigh_long.dat"
 
 
 class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
@@ -18,19 +21,20 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         # можно будет добавить кнопку reset для возвращения к начальному значению
         self.ini_data_elements = {
-            "x-size": DataEntry("X-size", 1500, ""),
-            "y-size": DataEntry("Y-size", 900, ""),
-            "x-step": DataEntry("X-step", 400, "m", True),
-            "y-step": DataEntry("Y-step", 400, "m", True),
-            "max elevation at source": DataEntry("Max elevation at source", 1.0, "m", True),
-            "ellipse half x length": DataEntry("Ellipse half x length", 50000, "m"),
-            "ellipse half y length": DataEntry("Ellipse half y length", 25000, "m"),
-            "ellipse center x location": DataEntry("Ellipse center x location", 750, ""),
-            "ellipse center y location": DataEntry("Ellipse center y location", 750, ""),
-            "lowest depth": DataEntry("Lowest depth", 8.0, "m", True),
-            "time step": DataEntry("Time step", 0.5, "s", True),
-            "number of time steps": DataEntry("Number of time steps", 20, ""),
-            "number of steps between surface output": DataEntry("Number of steps\nbetween surface output", 4, "")
+            "x-size": DataEntry("x-size", "X-size", 1500, ""),
+            "y-size": DataEntry("y-size", "Y-size", 900, ""),
+            "x-step": DataEntry("x-step", "X-step", 400, "m", True),
+            "y-step": DataEntry("y-step", "Y-step", 400, "m", True),
+            "max elevation at source": DataEntry("max elevation at source", "Max elevation at source", 1.0, "m", True),
+            "ellipse half x length": DataEntry("ellipse half x length", "Ellipse half x length", 50000, "m"),
+            "ellipse half y length": DataEntry("ellipse half y length", "Ellipse half y length", 25000, "m"),
+            "ellipse center x location": DataEntry("ellipse center x location", "Ellipse center x location", 750, ""),
+            "ellipse center y location": DataEntry("ellipse center y location", "Ellipse center y location", 750, ""),
+            "lowest depth": DataEntry("lowest depth", "Lowest depth", 8.0, "m", True),
+            "time step": DataEntry("time step", "Time step", 0.5, "s", True),
+            "number of time steps": DataEntry("number of time steps", "Number of time steps", 5, ""),
+            "number of steps between surface output": DataEntry("number of steps between surface output",
+                                                                "Number of steps\nbetween surface output", 5, "")
         }
 
         self.input_menus_elements = {
@@ -66,7 +70,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.koryto = np.loadtxt("MOST\\koryto_profile.txt")
         self.koryto2d = np.transpose(np.tile(self.koryto, (1500, 1)))
 
-        self.koryto_plot = PlotBuilder("imshow", self.koryto2d)
+        self.koryto_plot = ImshowPlotBuilder(self.koryto2d)
 
         self.marigram_points = []
 
@@ -77,15 +81,16 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def _complete_ui(self):
         self.setCentralWidget(self.koryto_plot.get_widget())
+        self.draw_source()
 
         self.action_size.triggered.connect(
-            lambda: self._open_input_menu(self.input_menus_elements["size"]))
+            lambda: self._open_input_menu(self.input_menus_elements["size"], "Size parameters"))
         self.action_steps.triggered.connect(
-            lambda: self._open_input_menu(self.input_menus_elements["steps"]))
+            lambda: self._open_input_menu(self.input_menus_elements["steps"], "Steps parameters"))
         self.action_source_parameters.triggered.connect(
-            lambda: self._open_input_menu(self.input_menus_elements["source"]))
+            lambda: self._open_input_menu(self.input_menus_elements["source"], "Source parameters", True))
         self.action_calculation_parameters.triggered.connect(
-            lambda: self._open_input_menu(self.input_menus_elements["calculation"]))
+            lambda: self._open_input_menu(self.input_menus_elements["calculation"], "Calculation parameters"))
         self.action_calculate.triggered.connect(self._calculate)
 
         self.action_show_area.triggered.connect(
@@ -94,11 +99,18 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_select_points.triggered.connect(self._select_marigram_points)
         self.action_marigrams.triggered.connect(self._plot_marigrams)
 
-    def _open_input_menu(self, element_names):
+        self.action_load_existing_results.triggered.connect(self._load_and_show_result)
+
+        # self.draw_source()
+
+    def _open_input_menu(self, element_names, title, source=False):
         elements = []
         for n in element_names:
             elements.append(self.ini_data_elements[n])
-        menu = InputMenuDialog(elements)
+        if source:
+            menu = SourceMenuDialog(elements, title, self)
+        else:
+            menu = InputMenuDialog(elements, title)
         menu.exec()
 
     def _save_all_parameters(self):
@@ -110,7 +122,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         ini_data_file.close()
 
     def _calculate(self):
-        # это должно работать, только если программа запущена в первый раз, или если данные изменились!!!
+        # это должно работать, только если программа запущена в первый раз, или если данные изменились
         self._save_all_parameters()
         self._show_calculation_screen()
 
@@ -154,8 +166,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def _load_and_show_result(self):
         # print("finished")
-        self.max_height = np.loadtxt("MOST\\maxheigh.dat")
-        self.height = np.loadtxt("MOST\\heigh.dat")
+        self.max_height = np.loadtxt(max_height_file_name)
+        self.height = np.loadtxt(height_file_name)
 
         self.calculated = True
 
@@ -164,10 +176,10 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_heatmap_with_contour.setEnabled(True)
         self.action_shore_bar_chart.setEnabled(True)
 
-        self.heatmap_plot = PlotBuilder("imshow", self.max_height)
-        self.heatmap_3d_plot = PlotBuilder("3d", self.max_height)
-        self.heatmap_with_contour_plot = PlotBuilder("contour", self.max_height)
-        self.shore_bar_chart_plot = PlotBuilder("bar", self.max_height[750])
+        self.heatmap_plot = ImshowPlotBuilder(self.max_height, False)
+        self.heatmap_3d_plot = Imshow3DPlotBuilder(self.max_height)
+        self.heatmap_with_contour_plot = ImshowContourPlotBuilder(self.max_height, False)
+        self.shore_bar_chart_plot = BarPlotBuilder(self.max_height[750])
 
         if self.marigram_points:
             self.action_marigrams.setEnabled(True)
@@ -196,20 +208,41 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             self.action_marigrams.setEnabled(True)
 
     def _plot_marigrams(self):
+        x = []
+        time_step = self.ini_data_elements["time step"].get_current_value()
+        steps_total = self.ini_data_elements["number of time steps"].get_current_value()
+        steps_between = self.ini_data_elements["number of steps between surface output"].get_current_value()
+        for i in range(0, steps_total, steps_between):
+            x.append(i * time_step)
+
         plot_data = []
+        coordinates = []
         n_marigrams = len(self.marigram_points)
         length = len(self.height)
+        y_size = self.ini_data_elements["y-size"].get_current_value()
 
         for i in range(n_marigrams):
             point = self.marigram_points[i]
             start_y = int(point[1])
-            if start_y == 900:
-                start_y = 899
-            selected = self.height[[y for y in range(start_y, length, 900)], int(point[0])]
-            plot_data.append([point[0], point[1]] + selected.tolist())
+            if start_y == y_size:
+                start_y = y_size - 1
+            selected = self.height[[y for y in range(start_y, length, y_size)], int(point[0])]
+            plot_data.append(selected.tolist())
+            coordinates.append((point[0], point[1]))
 
-        self.marigrams_plot = PlotBuilder("marigrams", plot_data)
+        self.marigrams_plot = MarigramsPlotBuilder(x, plot_data, coordinates)
         self.setCentralWidget(self.marigrams_plot.get_widget())
+
+    def draw_source(self):
+        x = self.ini_data_elements["ellipse center x location"].get_current_value()
+        y = self.ini_data_elements["ellipse center y location"].get_current_value()
+        x_step = self.ini_data_elements["x-step"].get_current_value()
+        y_step = self.ini_data_elements["y-step"].get_current_value()
+        self.koryto_plot.draw_source(
+            (x, y),
+            (self.ini_data_elements["ellipse half x length"].get_current_value() * 2) / x_step,
+            (self.ini_data_elements["ellipse half y length"].get_current_value() * 2) / y_step
+        )
 
 
 if __name__ == '__main__':

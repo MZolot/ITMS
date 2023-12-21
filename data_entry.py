@@ -1,6 +1,7 @@
 class DataEntry:
-    def __init__(self, name, default_value, unit, is_float=False):
+    def __init__(self, name, label_text, default_value, unit, is_float=False):
         self.name = name
+        self.label_text = label_text
         self.default_value = default_value
         self.unit = unit
         self.__current_value = None
@@ -19,4 +20,4 @@ class DataEntry:
             self.__current_value = int(value)
 
     def __str__(self):
-        return self.name + " " + str(self.get_current_value()) + " " + self.unit
+        return self.label_text + " " + str(self.get_current_value()) + " " + self.unit
