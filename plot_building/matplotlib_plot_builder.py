@@ -154,7 +154,7 @@ class MarigramsPlotBuilder(PlotBuilder):
             else:
                 curr_ax = self.axes[i]
             curr_ax.plot(x, point_data)
-            curr_ax.set_title("x = {}, y = {}".format(int(point_coords[0]), int(point_coords[1])), x=1.11, y=0.1)
+            curr_ax.set_title("x = {}, y = {}".format(int(point_coords[0]), int(point_coords[1])), x=1.11, y=0.2)
             curr_ax.set_ylim([-1, 1])
             curr_ax.label_outer()
             curr_ax.spines['top'].set_visible(False)
@@ -163,9 +163,9 @@ class MarigramsPlotBuilder(PlotBuilder):
             curr_ax.grid(True)
 
         if n_marigrams == 1:
-            self.axes.set_xlabel("s")
+            self.axes.set_xlabel("s", loc='right')
         else:
-            self.axes[-1].set_xlabel("s")
+            self.axes[-1].set_xlabel("s", loc='right')
             self.axes[-1].spines['bottom'].set_visible(True)
 
         self.figure.subplots_adjust(right=0.83)

@@ -11,8 +11,8 @@ from PyQt5.QtCore import QProcess, Qt
 import numpy as np
 
 
-height_file_name = "MOST/extras/heigh_long.dat"
-max_height_file_name = "MOST/extras/maxheigh_long.dat"
+height_file_name = "MOST/extras/heigh_long_3.dat"
+max_height_file_name = "MOST/extras/maxheigh_long_3.dat"
 
 
 class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
@@ -179,7 +179,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.heatmap_plot = ImshowPlotBuilder(self.max_height, False)
         self.heatmap_3d_plot = Imshow3DPlotBuilder(self.max_height)
         self.heatmap_with_contour_plot = ImshowContourPlotBuilder(self.max_height, False)
-        self.shore_bar_chart_plot = BarPlotBuilder(self.max_height[750])
+        self.shore_bar_chart_plot = BarPlotBuilder(self.max_height[3])
 
         if self.marigram_points:
             self.action_marigrams.setEnabled(True)
