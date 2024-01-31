@@ -2,6 +2,8 @@ import ui_elements.main_ui as main_ui
 from data_entry import DataEntry
 from ui_elements.file_selection_menu import *
 from ui_elements.input_menu import *
+from ui_elements.computation_in_process_screen import *
+from file_loader import *
 from plot_building.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                                    HeatmapContourPlotBuilder,
                                                    Heatmap3DPlotBuilder,
@@ -9,8 +11,7 @@ from plot_building.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                                    MarigramsPlotBuilder)
 
 from PyQt5 import QtWidgets
-from PyQt5.QtGui import QFont
-from PyQt5.QtCore import QProcess, Qt
+from PyQt5.QtCore import QProcess, Qt, QThread
 
 import numpy as np
 
@@ -67,6 +68,16 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.calculated = False
 
+        self.height = None
+        self.max_height = None
+        self.thread = None
+        self.loader = None
+
+        self.heatmap_plot = None
+        self.heatmap_with_contour_plot = None
+        self.heatmap_3d_plot = None
+        self.shore_bar_chart_plot = None
+
         self.setupUi(self)
         self._complete_ui()
 
@@ -107,7 +118,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         menu.exec()
 
     def _open_file_selection_menu(self):
-        menu = FileSelectionMenuDialog(self.file_names, self._load_and_show_result)
+        menu = FileSelectionMenuDialog(self.file_names, self.load_result)
         menu.exec()
 
     def _save_all_parameters(self):
@@ -128,48 +139,44 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.process = QProcess()
         self.process.setWorkingDirectory('MOST\\')
         self.process.readyReadStandardOutput.connect(self._update_progress)
-        self.process.finished.connect(self._load_and_show_result)
+        self.process.finished.connect(self.load_result)
         self.process.start(commands)
 
     def _update_progress(self):
         data = self.process.readAllStandardOutput()
         stdout = bytes(data).decode("utf8").strip()
         if stdout != '':
-            self.pbar.setValue(int(stdout))
+            self.calculation_screen.update_progress_bar(int(stdout))
 
     def _show_calculation_screen(self):
         steps = self.ini_data_elements["number of time steps"].get_current_value()
-        label_computation_info = QtWidgets.QLabel(
-            "Computation in progress... Please wait.\n" + str(steps) + " steps total.")
-        label_computation_info.setAlignment(Qt.AlignCenter)
-        label_computation_info.setFont(QFont("MS Shell Dlg 2", 9))
-        label_computation_info.setMaximumHeight(50)
+        self.calculation_screen = ComputationScreen(steps)
+        self.setCentralWidget(self.calculation_screen.get_screen())
 
-        self.pbar = QtWidgets.QProgressBar(self)
-        self.pbar.setMaximum(steps)
-        self.pbar.setMaximumWidth(500)
-
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(label_computation_info)
-        layout.addWidget(self.pbar)
-        layout.setAlignment(Qt.AlignCenter)
-        layout.setSpacing(70)
-
-        container = QtWidgets.QWidget()
-        container.setLayout(layout)
-        # container.setAutoFillBackground(True)
-        # container.setStyleSheet("background-color: blue;")
-
-        self.setCentralWidget(container)
-
-    def _load_and_show_result(self):
-        # print("finished")
+    def _show_loading_screen(self):
+        print("finished")
         label_computation_info = QtWidgets.QLabel("Loading results... Please wait.")
         label_computation_info.setAlignment(Qt.AlignCenter)
         self.setCentralWidget(label_computation_info)
 
-        self.max_height = np.loadtxt(self.file_names["max_height"])
-        self.height = np.loadtxt(self.file_names["height"])
+    def load_result(self):
+        self._show_loading_screen()
+
+        self.thread = QThread()
+        self.loader = FileLoader([self.file_names["max_height"], self.file_names["height"]])
+        self.loader.moveToThread(self.thread)
+        self.thread.started.connect(self.loader.run)
+        self.loader.finished.connect(self.thread.quit)
+        self.loader.finished.connect(self.loader.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+        self.thread.finished.connect(self.show_result)
+        # self.loader.progress.connect(self.reportProgress)
+        self.thread.start()
+
+    def show_result(self):
+        loaded_files = self.loader.get_results()
+        self.max_height = loaded_files[self.file_names["max_height"]]
+        self.height = loaded_files[self.file_names["height"]]
 
         self.calculated = True
 
