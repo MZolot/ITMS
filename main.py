@@ -1,76 +1,67 @@
 import ui_elements.main_ui as main_ui
 from data_entry import DataEntry
+from ui_elements.file_selection_menu import *
 from ui_elements.input_menu import *
-from plot_building.matplotlib_plot_builder import *
+from plot_building.matplotlib_plot_builder import (HeatmapPlotBuilder,
+                                                   HeatmapContourPlotBuilder,
+                                                   Heatmap3DPlotBuilder,
+                                                   BarPlotBuilder,
+                                                   MarigramsPlotBuilder)
 
-import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import QProcess, Qt
 
 import numpy as np
 
+import sys
+import json
 
-height_file_name = "MOST/extras/heigh_long_3.dat"
-max_height_file_name = "MOST/extras/maxheigh_long_3.dat"
+ini_data_elements_file_name = "resources/ini_data_elements.json"
+
+executable_file_name = "MOST/wave_1500x900_01.exe"
+
+bottom_profile_file_name = "MOST/koryto_profile.txt"
+
+
+# ini_data_file_name = "MOST/ini_data.txt"
+# height_file_name = "MOST/heigh.dat"
+# max_height_file_name = "MOST/maxheigh.dat"
 
 
 class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     def __init__(self):
         super().__init__()
 
-        # можно будет добавить кнопку reset для возвращения к начальному значению
-        self.ini_data_elements = {
-            "x-size": DataEntry("x-size", "X-size", 1500, ""),
-            "y-size": DataEntry("y-size", "Y-size", 900, ""),
-            "x-step": DataEntry("x-step", "X-step", 400, "m", True),
-            "y-step": DataEntry("y-step", "Y-step", 400, "m", True),
-            "max elevation at source": DataEntry("max elevation at source", "Max elevation at source", 1.0, "m", True),
-            "ellipse half x length": DataEntry("ellipse half x length", "Ellipse half x length", 50000, "m"),
-            "ellipse half y length": DataEntry("ellipse half y length", "Ellipse half y length", 25000, "m"),
-            "ellipse center x location": DataEntry("ellipse center x location", "Ellipse center x location", 750, ""),
-            "ellipse center y location": DataEntry("ellipse center y location", "Ellipse center y location", 750, ""),
-            "lowest depth": DataEntry("lowest depth", "Lowest depth", 8.0, "m", True),
-            "time step": DataEntry("time step", "Time step", 0.5, "s", True),
-            "number of time steps": DataEntry("number of time steps", "Number of time steps", 5, ""),
-            "number of steps between surface output": DataEntry("number of steps between surface output",
-                                                                "Number of steps\nbetween surface output", 5, "")
+        self.file_names = {
+            "initial": "MOST/ini_data.txt",
+            "height": "MOST/heigh.dat",
+            "max_height": "MOST/maxheigh.dat"
         }
+
+        # можно будет добавить кнопку reset для возвращения к начальному значению
+        self.ini_data_elements = {}
+        with open(ini_data_elements_file_name, 'r') as j:
+            from_json = json.loads(j.read())
+            for element in from_json:
+                self.ini_data_elements[element["name"]] = DataEntry(element["name"], element["label_text"],
+                                                                    element["default_value"], element["unit"],
+                                                                    element["is_float"])
 
         self.input_menus_elements = {
-            "area": [
-                "x-size",
-                "y-size",
-                "x-step",
-                "y-step"
-            ],
-            "size": [
-                "x-size",
-                "y-size"
-            ],
-            "steps": [
-                "x-step",
-                "y-step"
-            ],
-            "source": [
-                "max elevation at source",
-                "ellipse half x length",
-                "ellipse half y length",
-                "ellipse center x location",
-                "ellipse center y location",
-                "lowest depth"
-            ],
-            "calculation": [
-                "time step",
-                "number of time steps",
-                "number of steps between surface output"
-            ]
+            "area": ["x-size", "y-size", "x-step", "y-step"],
+            "size": ["x-size", "y-size"],
+            "steps": ["x-step", "y-step"],
+            "source": ["max elevation at source", "ellipse half x length", "ellipse half y length",
+                       "ellipse center x location", "ellipse center y location", "lowest depth"],
+            "calculation": ["time step", "number of time steps", "number of steps between surface output"]
         }
 
-        self.koryto = np.loadtxt("MOST\\koryto_profile.txt")
-        self.koryto2d = np.transpose(np.tile(self.koryto, (1500, 1)))
+        self.bottom_profile = np.loadtxt(bottom_profile_file_name)
+        self.bottom_map = np.transpose(np.tile(self.bottom_profile, (1500, 1)))
+        # self.bottom_map = np.tile(self.bottom_profile, (1500, 1))
 
-        self.koryto_plot = ImshowPlotBuilder(self.koryto2d)
+        self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
 
         self.marigram_points = []
 
@@ -80,7 +71,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self._complete_ui()
 
     def _complete_ui(self):
-        self.setCentralWidget(self.koryto_plot.get_widget())
+        self.setCentralWidget(self.bottom_plot.get_widget())
         self.draw_source()
 
         self.action_size.triggered.connect(
@@ -94,12 +85,14 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_calculate.triggered.connect(self._calculate)
 
         self.action_show_area.triggered.connect(
-            lambda: self.setCentralWidget(self.koryto_plot.get_widget()))
+            lambda: self.setCentralWidget(self.bottom_plot.get_widget()))
 
-        self.action_select_points.triggered.connect(self._select_marigram_points)
+        self.action_select_points_on_area.triggered.connect(
+            lambda: self._select_marigram_points(self.bottom_plot))
         self.action_marigrams.triggered.connect(self._plot_marigrams)
 
-        self.action_load_existing_results.triggered.connect(self._load_and_show_result)
+        # self.action_load_existing_results.triggered.connect(self._load_and_show_result)
+        self.action_load_existing_results.triggered.connect(self._open_file_selection_menu)
 
         # self.draw_source()
 
@@ -113,11 +106,15 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             menu = InputMenuDialog(elements, title)
         menu.exec()
 
+    def _open_file_selection_menu(self):
+        menu = FileSelectionMenuDialog(self.file_names, self._load_and_show_result)
+        menu.exec()
+
     def _save_all_parameters(self):
-        ini_data_file = open("MOST\\ini_data.txt", "w")
+        ini_data_file = open(self.file_names["initial"], "w")
 
         for i in self.ini_data_elements.values():
-            input_data = str(i.get_current_value()) + '\n'
+            input_data = str(i.get_current_value()) + "  --  " + i.label_text + '\n'
             ini_data_file.write(input_data)
         ini_data_file.close()
 
@@ -126,7 +123,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self._save_all_parameters()
         self._show_calculation_screen()
 
-        commands = "MOST\\wave_1500x900_01.exe"
+        commands = executable_file_name
 
         self.process = QProcess()
         self.process.setWorkingDirectory('MOST\\')
@@ -142,17 +139,18 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def _show_calculation_screen(self):
         steps = self.ini_data_elements["number of time steps"].get_current_value()
-        label1 = QtWidgets.QLabel("Computation in progress... Please wait.\n" + str(steps) + " steps total.")
-        label1.setAlignment(Qt.AlignCenter)
-        label1.setFont(QFont("MS Shell Dlg 2", 9))
-        label1.setMaximumHeight(50)
+        label_computation_info = QtWidgets.QLabel(
+            "Computation in progress... Please wait.\n" + str(steps) + " steps total.")
+        label_computation_info.setAlignment(Qt.AlignCenter)
+        label_computation_info.setFont(QFont("MS Shell Dlg 2", 9))
+        label_computation_info.setMaximumHeight(50)
 
         self.pbar = QtWidgets.QProgressBar(self)
         self.pbar.setMaximum(steps)
         self.pbar.setMaximumWidth(500)
 
         layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(label1)
+        layout.addWidget(label_computation_info)
         layout.addWidget(self.pbar)
         layout.setAlignment(Qt.AlignCenter)
         layout.setSpacing(70)
@@ -166,19 +164,23 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def _load_and_show_result(self):
         # print("finished")
-        self.max_height = np.loadtxt(max_height_file_name)
-        self.height = np.loadtxt(height_file_name)
+        label_computation_info = QtWidgets.QLabel("Loading results... Please wait.")
+        label_computation_info.setAlignment(Qt.AlignCenter)
+        self.setCentralWidget(label_computation_info)
+
+        self.max_height = np.loadtxt(self.file_names["max_height"])
+        self.height = np.loadtxt(self.file_names["height"])
 
         self.calculated = True
 
         self.action_heatmap.setEnabled(True)
-        self.action_3d_heatmap.setEnabled(True)
         self.action_heatmap_with_contour.setEnabled(True)
+        self.action_3d_heatmap.setEnabled(True)
         self.action_shore_bar_chart.setEnabled(True)
 
-        self.heatmap_plot = ImshowPlotBuilder(self.max_height, False)
-        self.heatmap_3d_plot = Imshow3DPlotBuilder(self.max_height)
-        self.heatmap_with_contour_plot = ImshowContourPlotBuilder(self.max_height, False)
+        self.heatmap_plot = HeatmapPlotBuilder(self.max_height, False)
+        self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.max_height, False)
+        self.heatmap_3d_plot = Heatmap3DPlotBuilder(self.max_height)
         self.shore_bar_chart_plot = BarPlotBuilder(self.max_height[3])
 
         if self.marigram_points:
@@ -197,12 +199,16 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             lambda: self.setCentralWidget(self.shore_bar_chart_plot.get_widget())
         )
 
+        self.action_select_points_on_heatmap.setEnabled(True)
+        self.action_select_points_on_heatmap.triggered.connect(
+            lambda: self._select_marigram_points(self.heatmap_plot))
+
         self.setCentralWidget(self.heatmap_plot.get_widget())
 
-    def _select_marigram_points(self):
-        self.setCentralWidget(self.koryto_plot.get_widget())
-        self.marigram_points = self.koryto_plot.get_input_points()
-        self.koryto_plot.draw_points(self.marigram_points)
+    def _select_marigram_points(self, plot):
+        self.setCentralWidget(plot.get_widget())
+        self.marigram_points = plot.get_input_points()
+        plot.draw_points(self.marigram_points)
 
         if self.calculated:
             self.action_marigrams.setEnabled(True)
@@ -238,7 +244,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         y = self.ini_data_elements["ellipse center y location"].get_current_value()
         x_step = self.ini_data_elements["x-step"].get_current_value()
         y_step = self.ini_data_elements["y-step"].get_current_value()
-        self.koryto_plot.draw_source(
+        self.bottom_plot.draw_source(
             (x, y),
             (self.ini_data_elements["ellipse half x length"].get_current_value() * 2) / x_step,
             (self.ini_data_elements["ellipse half y length"].get_current_value() * 2) / y_step

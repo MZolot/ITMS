@@ -44,7 +44,7 @@ class PlotBuilder:
         return layout
 
 
-class ImshowPlotBuilder(PlotBuilder):
+class HeatmapPlotBuilder(PlotBuilder):
     def __init__(self, plot_data, default_cmap=True):
         super().__init__()
         self.ellipse = None
@@ -86,11 +86,15 @@ class ImshowPlotBuilder(PlotBuilder):
             self.ellipse.remove()
 
 
-class ImshowContourPlotBuilder(ImshowPlotBuilder):
+class HeatmapContourPlotBuilder(HeatmapPlotBuilder):
     def __init__(self, plot_data, default_cmap=True):
         super().__init__(plot_data, default_cmap)
         levels = [0.005, 0.01, 0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1]
-        self.axes.contourf(plot_data, levels=levels, cmap=cmap_imshow)
+
+        if default_cmap:
+            self.axes.contourf(plot_data, levels=levels)
+        else:
+            self.axes.contourf(plot_data, levels=levels, cmap=cmap_imshow)
 
 
 class BarPlotBuilder(PlotBuilder):
@@ -102,7 +106,7 @@ class BarPlotBuilder(PlotBuilder):
         self.axes.bar(x, plot_data)
 
 
-class Imshow3DPlotBuilder(PlotBuilder):
+class Heatmap3DPlotBuilder(PlotBuilder):
     def __init__(self, plot_data):
         super().__init__()
 

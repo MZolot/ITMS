@@ -18,6 +18,8 @@ class InputMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
             p = data_elements[i]
 
             name_label = QtWidgets.QLabel(p.label_text)
+            name_label.setWordWrap(True)
+            name_label.setMinimumWidth(150)
 
             line_edit = QtWidgets.QLineEdit()
             line_edit.setPlaceholderText(str(p.get_current_value()))
@@ -31,6 +33,8 @@ class InputMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
             self.gridLayout.addWidget(name_label, i, 0)
             self.gridLayout.addWidget(line_edit, i, 1)
             self.gridLayout.addWidget(unit_label, i, 2)
+
+            self.gridLayout.setHorizontalSpacing(15)
 
             self.setWindowTitle(self.title)
 
