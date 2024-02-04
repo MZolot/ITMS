@@ -3,6 +3,7 @@ from data_entry import DataEntry
 from ui_elements.file_selection_menu import *
 from ui_elements.input_menu import *
 from ui_elements.computation_in_process_screen import *
+from ui_elements.isoline_settings_dialog import *
 from file_loader import *
 from plot_building.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                                    HeatmapContourPlotBuilder,
@@ -24,10 +25,9 @@ executable_file_name = "MOST/wave_1500x900_01.exe"
 
 bottom_profile_file_name = "MOST/koryto_profile.txt"
 
-
-# ini_data_file_name = "MOST/ini_data.txt"
-# height_file_name = "MOST/heigh.dat"
-# max_height_file_name = "MOST/maxheigh.dat"
+ini_data_default_file_name = "MOST/ini_data.txt"
+height_default_file_name = "MOST/heigh.dat"
+max_height_default_file_name = "MOST/maxheigh.dat"
 
 
 class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
@@ -35,9 +35,9 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         super().__init__()
 
         self.file_names = {
-            "initial": "MOST/ini_data.txt",
-            "height": "MOST/heigh.dat",
-            "max_height": "MOST/maxheigh.dat"
+            "initial": ini_data_default_file_name,
+            "height": height_default_file_name,
+            "max_height": max_height_default_file_name
         }
 
         # можно будет добавить кнопку reset для возвращения к начальному значению
@@ -65,6 +65,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
 
         self.marigram_points = []
+        self.isoline_levels = [0.005, 0.01, 0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1]
 
         self.calculated = False
 
@@ -102,8 +103,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             lambda: self._select_marigram_points(self.bottom_plot))
         self.action_marigrams.triggered.connect(self._plot_marigrams)
 
-        # self.action_load_existing_results.triggered.connect(self._load_and_show_result)
         self.action_load_existing_results.triggered.connect(self._open_file_selection_menu)
+        self.action_set_contour_lines_levels.triggered.connect(self._open_isoline_settings_menu)
 
         # self.draw_source()
 
@@ -115,6 +116,10 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             menu = SourceMenuDialog(elements, title, self)
         else:
             menu = InputMenuDialog(elements, title)
+        menu.exec()
+
+    def _open_isoline_settings_menu(self):
+        menu = IsolineSettingsDialog(self.isoline_levels, self.update_isoline_levels)
         menu.exec()
 
     def _open_file_selection_menu(self):
@@ -173,8 +178,16 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         # self.loader.progress.connect(self.reportProgress)
         self.thread.start()
 
+    def parse_initial_data_file(self):
+        f = open(self.file_names["initial"], "r")
+        for parameter in self.ini_data_elements.values():
+            new_value = f.readline().split()[0]
+            parameter.set_current_value(new_value)
+
     def show_result(self):
         loaded_files = self.loader.get_results()
+        if self.file_names["initial"] != ini_data_default_file_name:
+            self.parse_initial_data_file()
         self.max_height = loaded_files[self.file_names["max_height"]]
         self.height = loaded_files[self.file_names["height"]]
 
@@ -185,8 +198,10 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_3d_heatmap.setEnabled(True)
         self.action_shore_bar_chart.setEnabled(True)
 
-        self.heatmap_plot = HeatmapPlotBuilder(self.max_height, False)
-        self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.max_height, False)
+        self.heatmap_plot = HeatmapPlotBuilder(self.max_height, default_cmap=False)
+        self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.max_height,
+                                                                   levels=self.isoline_levels,
+                                                                   use_default_cmap=False)
         self.heatmap_3d_plot = Heatmap3DPlotBuilder(self.max_height)
         self.shore_bar_chart_plot = BarPlotBuilder(self.max_height[3])
 
@@ -256,6 +271,15 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             (self.ini_data_elements["ellipse half x length"].get_current_value() * 2) / x_step,
             (self.ini_data_elements["ellipse half y length"].get_current_value() * 2) / y_step
         )
+
+    def update_isoline_levels(self):
+        if not self.calculated:
+            return
+
+        self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.max_height,
+                                                                   levels=self.isoline_levels,
+                                                                   use_default_cmap=False)
+        self.setCentralWidget(self.heatmap_with_contour_plot.get_widget())
 
 
 if __name__ == '__main__':

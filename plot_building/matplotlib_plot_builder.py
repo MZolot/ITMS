@@ -87,11 +87,11 @@ class HeatmapPlotBuilder(PlotBuilder):
 
 
 class HeatmapContourPlotBuilder(HeatmapPlotBuilder):
-    def __init__(self, plot_data, default_cmap=True):
-        super().__init__(plot_data, default_cmap)
-        levels = [0.005, 0.01, 0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1]
+    def __init__(self, plot_data, levels, use_default_cmap=True):
+        super().__init__(plot_data, use_default_cmap)
+        self.levels = levels
 
-        if default_cmap:
+        if use_default_cmap:
             self.axes.contourf(plot_data, levels=levels)
         else:
             self.axes.contourf(plot_data, levels=levels, cmap=cmap_imshow)
