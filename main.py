@@ -5,11 +5,12 @@ from ui_elements.input_menu import *
 from ui_elements.computation_in_process_screen import *
 from ui_elements.isoline_settings_dialog import *
 from file_loader import *
-from plot_building.matplotlib_plot_builder import (HeatmapPlotBuilder,
-                                                   HeatmapContourPlotBuilder,
-                                                   Heatmap3DPlotBuilder,
-                                                   BarPlotBuilder,
-                                                   MarigramsPlotBuilder)
+from plots.stacked_plots_widget import PlotWidget
+from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
+                                           HeatmapContourPlotBuilder,
+                                           Heatmap3DPlotBuilder,
+                                           BarPlotBuilder,
+                                           MarigramsPlotBuilder)
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QProcess, Qt, QThread
@@ -63,6 +64,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         # self.bottom_map = np.tile(self.bottom_profile, (1500, 1))
 
         self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
+        self.draw_source()
+        self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
 
         self.marigram_points = []
         self.isoline_levels = [0.005, 0.01, 0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1]
@@ -83,7 +86,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self._complete_ui()
 
     def _complete_ui(self):
-        self.setCentralWidget(self.bottom_plot.get_widget())
+        self.setCentralWidget(self.plot_widget.get_widget())
         self.draw_source()
 
         self.action_size.triggered.connect(
@@ -97,16 +100,14 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_calculate.triggered.connect(self._calculate)
 
         self.action_show_area.triggered.connect(
-            lambda: self.setCentralWidget(self.bottom_plot.get_widget()))
+            lambda: self.plot_widget.set_plot("bottom"))
 
         self.action_select_points_on_area.triggered.connect(
-            lambda: self._select_marigram_points(self.bottom_plot))
+            lambda: self._select_marigram_points("bottom"))
         self.action_marigrams.triggered.connect(self._plot_marigrams)
 
         self.action_load_existing_results.triggered.connect(self._open_file_selection_menu)
         self.action_set_contour_lines_levels.triggered.connect(self._open_isoline_settings_menu)
-
-        # self.draw_source()
 
     def _open_input_menu(self, element_names, title, source=False):
         elements = []
@@ -159,7 +160,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.setCentralWidget(self.calculation_screen.get_screen())
 
     def _show_loading_screen(self):
-        print("finished")
         label_computation_info = QtWidgets.QLabel("Loading results... Please wait.")
         label_computation_info.setAlignment(Qt.AlignCenter)
         self.setCentralWidget(label_computation_info)
@@ -175,7 +175,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.loader.finished.connect(self.loader.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
         self.thread.finished.connect(self.show_result)
-        # self.loader.progress.connect(self.reportProgress)
         self.thread.start()
 
     def parse_initial_data_file(self):
@@ -185,6 +184,11 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             parameter.set_current_value(new_value)
 
     def show_result(self):
+        print("show result")
+        self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
+        self.draw_source()
+        self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
+
         loaded_files = self.loader.get_results()
         if self.file_names["initial"] != ini_data_default_file_name:
             self.parse_initial_data_file()
@@ -205,30 +209,37 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.heatmap_3d_plot = Heatmap3DPlotBuilder(self.max_height)
         self.shore_bar_chart_plot = BarPlotBuilder(self.max_height[3])
 
+        self.plot_widget.add_plot("heatmap", self.heatmap_plot)
+        self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
+        self.plot_widget.add_plot("heatmap 3d", self.heatmap_3d_plot)
+        self.plot_widget.add_plot("bar", self.shore_bar_chart_plot)
+
         if self.marigram_points:
             self.action_marigrams.setEnabled(True)
 
         self.action_heatmap.triggered.connect(
-            lambda: self.setCentralWidget(self.heatmap_plot.get_widget())
+            lambda: self.plot_widget.set_plot("heatmap")
         )
         self.action_3d_heatmap.triggered.connect(
-            lambda: self.setCentralWidget(self.heatmap_3d_plot.get_widget())
+            lambda: self.plot_widget.set_plot("heatmap 3d")
         )
         self.action_heatmap_with_contour.triggered.connect(
-            lambda: self.setCentralWidget(self.heatmap_with_contour_plot.get_widget())
+            lambda: self.plot_widget.set_plot("heatmap contour")
         )
         self.action_shore_bar_chart.triggered.connect(
-            lambda: self.setCentralWidget(self.shore_bar_chart_plot.get_widget())
+            lambda: self.plot_widget.set_plot("bar")
         )
 
         self.action_select_points_on_heatmap.setEnabled(True)
         self.action_select_points_on_heatmap.triggered.connect(
-            lambda: self._select_marigram_points(self.heatmap_plot))
+            lambda: self._select_marigram_points("heatmap"))
 
-        self.setCentralWidget(self.heatmap_plot.get_widget())
+        self.plot_widget.set_plot("heatmap")
+        self.setCentralWidget(self.plot_widget.get_widget())
 
-    def _select_marigram_points(self, plot):
-        self.setCentralWidget(plot.get_widget())
+    def _select_marigram_points(self, plot_name: str):
+        self.plot_widget.set_plot(plot_name)
+        plot = self.plot_widget.get_plot_by_name(plot_name)
         self.marigram_points = plot.get_input_points()
         plot.draw_points(self.marigram_points)
 
@@ -259,7 +270,9 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             coordinates.append((point[0], point[1]))
 
         self.marigrams_plot = MarigramsPlotBuilder(x, plot_data, coordinates)
-        self.setCentralWidget(self.marigrams_plot.get_widget())
+        self.plot_widget.add_plot("marigrams", self.marigrams_plot)
+        self.plot_widget.set_plot("marigrams")
+        # self.setCentralWidget(self.marigrams_plot.get_widget())
 
     def draw_source(self):
         x = self.ini_data_elements["ellipse center x location"].get_current_value()
@@ -279,7 +292,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.max_height,
                                                                    levels=self.isoline_levels,
                                                                    use_default_cmap=False)
-        self.setCentralWidget(self.heatmap_with_contour_plot.get_widget())
+        self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
+        self.plot_widget.set_plot("heatmap contour")
 
 
 if __name__ == '__main__':

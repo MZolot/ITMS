@@ -12,9 +12,8 @@ class FileLoader(QObject):
         self.loading_results = {}
 
     def run(self):
-        print("run")
         for f in self.files_to_load:
-            print(f)
+            print("loading" + f)
             res = np.loadtxt(f)
             self.loading_results[f] = res
             # self.progress.emit(i + 1)

@@ -132,9 +132,6 @@ class Heatmap3DPlotBuilder(PlotBuilder):
 class MarigramsPlotBuilder(PlotBuilder):
     def __init__(self, x, plot_data, coordinates):
         super().__init__()
-        print(x)
-        print(plot_data)
-        print(coordinates)
 
         n_marigrams = len(plot_data)
         self.axes = self.figure.subplots(n_marigrams)

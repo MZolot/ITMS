@@ -88,6 +88,6 @@
         "label_text": "Number of steps between surface output",
         "unit": "",
         "is_float": false,
-        "default_value": 5
+        "default_value": 1
     }
 ]
