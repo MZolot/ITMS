@@ -20,9 +20,7 @@ class PlotBuilder:
 
     def get_widget(self):
         canvas = FigureCanvas(self.figure)
-        print("\n\nTOOLBAR!!!")
         toolbar = NavigationToolbar(canvas)
-        print("toolbar...\n\n")
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(toolbar)
@@ -32,16 +30,6 @@ class PlotBuilder:
         container.setLayout(layout)
 
         return container
-
-    def get_layout(self):
-        canvas = FigureCanvas(self.figure)
-        toolbar = NavigationToolbar(canvas)
-
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(toolbar)
-        layout.addWidget(canvas)
-
-        return layout
 
 
 class HeatmapPlotBuilder(PlotBuilder):

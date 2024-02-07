@@ -1,4 +1,4 @@
-import ui_elements.isoline_settings_dialog_ui as menu_ui
+import ui_elements.qt_designer_ui.isoline_settings_dialog_ui as menu_ui
 from PyQt5 import QtWidgets
 
 

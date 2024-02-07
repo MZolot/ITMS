@@ -1,4 +1,4 @@
-import ui_elements.file_selection_menu_ui as menu_ui
+import ui_elements.qt_designer_ui.file_selection_menu_ui as menu_ui
 from PyQt5 import QtWidgets
 
 

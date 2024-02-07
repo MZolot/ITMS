@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MOST visualisation</string>
+  </property>
+  <widget class="QWidget" name="central_widget"/>
+  <widget class="QMenuBar" name="menu_bar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_area">
+    <property name="title">
+     <string>Area</string>
+    </property>
+    <widget class="QMenu" name="menuBottom_profile">
+     <property name="title">
+      <string>Bottom profile...</string>
+     </property>
+     <addaction name="action_default"/>
+    </widget>
+    <addaction name="menuBottom_profile"/>
+    <addaction name="separator"/>
+    <addaction name="action_size"/>
+    <addaction name="action_steps"/>
+    <addaction name="separator"/>
+    <addaction name="action_show_area"/>
+   </widget>
+   <widget class="QMenu" name="menu_source">
+    <property name="title">
+     <string>Source</string>
+    </property>
+    <addaction name="action_source_parameters"/>
+   </widget>
+   <widget class="QMenu" name="menu_marigrams">
+    <property name="title">
+     <string>Marigrams</string>
+    </property>
+    <widget class="QMenu" name="menu_select_points">
+     <property name="title">
+      <string>Select points...</string>
+     </property>
+     <addaction name="action_select_points_on_area"/>
+     <addaction name="action_select_points_on_heatmap"/>
+    </widget>
+    <addaction name="menu_select_points"/>
+   </widget>
+   <widget class="QMenu" name="menu_calculations">
+    <property name="title">
+     <string>Calculations</string>
+    </property>
+    <addaction name="action_calculation_parameters"/>
+    <addaction name="action_calculate"/>
+    <addaction name="separator"/>
+    <addaction name="action_load_existing_results"/>
+   </widget>
+   <widget class="QMenu" name="menu_visualisation">
+    <property name="title">
+     <string>Visualisation</string>
+    </property>
+    <addaction name="action_heatmap"/>
+    <addaction name="action_heatmap_with_contour"/>
+    <addaction name="action_3d_heatmap"/>
+    <addaction name="action_shore_bar_chart"/>
+    <addaction name="separator"/>
+    <addaction name="action_marigrams"/>
+    <addaction name="separator"/>
+    <addaction name="action_set_contour_lines_levels"/>
+   </widget>
+   <addaction name="menu_area"/>
+   <addaction name="menu_source"/>
+   <addaction name="menu_marigrams"/>
+   <addaction name="menu_calculations"/>
+   <addaction name="menu_visualisation"/>
+  </widget>
+  <widget class="QStatusBar" name="status_bar"/>
+  <action name="action_size">
+   <property name="text">
+    <string>Size...</string>
+   </property>
+  </action>
+  <action name="action_steps">
+   <property name="text">
+    <string>Steps...</string>
+   </property>
+  </action>
+  <action name="action_source_parameters">
+   <property name="text">
+    <string>Change source parameters...</string>
+   </property>
+  </action>
+  <action name="action_calculate">
+   <property name="text">
+    <string>Calculate</string>
+   </property>
+  </action>
+  <action name="action_heatmap">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Heatmap</string>
+   </property>
+  </action>
+  <action name="action_3d_heatmap">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>3D heatmap</string>
+   </property>
+  </action>
+  <action name="action_shore_bar_chart">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Shore bar chart</string>
+   </property>
+  </action>
+  <action name="action_marigrams">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Marigrams</string>
+   </property>
+  </action>
+  <action name="action_calculation_parameters">
+   <property name="text">
+    <string>Change calculation parameters...</string>
+   </property>
+  </action>
+  <action name="actionArea">
+   <property name="text">
+    <string>Area</string>
+   </property>
+  </action>
+  <action name="action_show_area">
+   <property name="text">
+    <string>Show Area</string>
+   </property>
+  </action>
+  <action name="action_heatmap_contour">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Heatmap with contour lines</string>
+   </property>
+   <property name="font">
+    <font/>
+   </property>
+  </action>
+  <action name="action_heatmap_with_contour">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Heatmap with contour lines</string>
+   </property>
+  </action>
+  <action name="action_load_existing_results">
+   <property name="text">
+    <string>Load existing results...</string>
+   </property>
+  </action>
+  <action name="action_select_points_on_area">
+   <property name="text">
+    <string>On area</string>
+   </property>
+  </action>
+  <action name="action_select_points_on_heatmap">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>On heatmap</string>
+   </property>
+  </action>
+  <action name="action_set_contour_lines_levels">
+   <property name="text">
+    <string>Set contour lines levels...</string>
+   </property>
+  </action>
+  <action name="action_default">
+   <property name="text">
+    <string>Default</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

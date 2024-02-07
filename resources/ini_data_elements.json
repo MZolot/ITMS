@@ -1,0 +1,93 @@
+[
+    {
+        "name": "x-size",
+        "label_text": "X-size",
+        "unit": "",
+        "is_float": false,
+        "default_value": 1500
+    },
+    {
+        "name": "y-size",
+        "label_text": "Y-size",
+        "unit": "",
+        "is_float": false,
+        "default_value": 900
+    },
+    {
+        "name": "x-step",
+        "label_text": "X-step",
+        "unit": "m",
+        "is_float": true,
+        "default_value": 400
+    },
+    {
+        "name": "y-step",
+        "label_text": "Y-step",
+        "unit": "m",
+        "is_float": true,
+        "default_value": 400
+    },
+    {
+        "name": "max elevation at source",
+        "label_text": "Max elevation at source",
+        "unit": "m",
+        "is_float": true,
+        "default_value": 1.0
+    },
+    {
+        "name": "ellipse half x length",
+        "label_text": "Ellipse half x length",
+        "unit": "m",
+        "is_float": false,
+        "default_value": 50000
+    },
+    {
+        "name": "ellipse half y length",
+        "label_text": "Ellipse half y length",
+        "unit": "m",
+        "is_float": false,
+        "default_value": 25000
+    },
+    {
+        "name": "ellipse center x location",
+        "label_text": "Ellipse center x location",
+        "unit": "",
+        "is_float": false,
+        "default_value": 750
+    },
+    {
+        "name": "ellipse center y location",
+        "label_text": "Ellipse center y location",
+        "unit": "",
+        "is_float": false,
+        "default_value": 750
+    },
+    {
+        "name": "lowest depth",
+        "label_text": "Lowest depth",
+        "unit": "m",
+        "is_float": true,
+        "default_value": 8.0
+    },
+    {
+        "name": "time step",
+        "label_text": "Time step",
+        "unit": "s",
+        "is_float": true,
+        "default_value": 0.5
+    },
+    {
+        "name": "number of time steps",
+        "label_text": "Number of time steps",
+        "unit": "",
+        "is_float": false,
+        "default_value": 5
+    },
+    {
+        "name": "number of steps between surface output",
+        "label_text": "Number of steps between surface output",
+        "unit": "",
+        "is_float": false,
+        "default_value": 5
+    }
+]

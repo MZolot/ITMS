@@ -1,4 +1,4 @@
-import ui_elements.main_ui as main_ui
+import ui_elements.qt_designer_ui.main_ui as main_ui
 from data_entry import DataEntry
 from ui_elements.file_selection_menu import *
 from ui_elements.input_menu import *
