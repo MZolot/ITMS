@@ -1,6 +1,6 @@
 import ui_elements.qt_designer_ui.main_ui as main_ui
 from data_entry import DataEntry
-from ui_elements.file_selection_menu import *
+from ui_elements.load_data_file_selection_menu import *
 from ui_elements.input_menu import *
 from ui_elements.computation_in_process_screen import *
 from ui_elements.isoline_settings_dialog import *
@@ -197,22 +197,23 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.calculated = True
 
-        self.action_heatmap.setEnabled(True)
-        self.action_heatmap_with_contour.setEnabled(True)
-        self.action_3d_heatmap.setEnabled(True)
-        self.action_shore_bar_chart.setEnabled(True)
-
         self.heatmap_plot = HeatmapPlotBuilder(self.max_height, default_cmap=False)
         self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.max_height,
                                                                    levels=self.isoline_levels,
                                                                    use_default_cmap=False)
         self.heatmap_3d_plot = Heatmap3DPlotBuilder(self.max_height)
-        self.shore_bar_chart_plot = BarPlotBuilder(self.max_height[3])
+        self.shore_bar_chart_plot = BarPlotBuilder(self.max_height[3], self.save_bar_chart_data)
 
         self.plot_widget.add_plot("heatmap", self.heatmap_plot)
         self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
         self.plot_widget.add_plot("heatmap 3d", self.heatmap_3d_plot)
         self.plot_widget.add_plot("bar", self.shore_bar_chart_plot)
+
+        self.action_heatmap.setEnabled(True)
+        self.action_heatmap_with_contour.setEnabled(True)
+        self.action_3d_heatmap.setEnabled(True)
+        self.action_shore_bar_chart.setEnabled(True)
+        self.action_draw_wave_profile.setEnabled(True)
 
         if self.marigram_points:
             self.action_marigrams.setEnabled(True)
@@ -272,7 +273,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.marigrams_plot = MarigramsPlotBuilder(x, plot_data, coordinates)
         self.plot_widget.add_plot("marigrams", self.marigrams_plot)
         self.plot_widget.set_plot("marigrams")
-        # self.setCentralWidget(self.marigrams_plot.get_widget())
 
     def draw_source(self):
         x = self.ini_data_elements["ellipse center x location"].get_current_value()
@@ -294,6 +294,20 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                                                    use_default_cmap=False)
         self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
         self.plot_widget.set_plot("heatmap contour")
+
+    def save_bar_chart_data(self):
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        file_name, _ = QtWidgets.QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", "",
+                                                             "All Files (*);;Text Files (*.txt)", options=options)
+        if not file_name:
+            print("no file name")
+            return
+
+        print(file_name)
+        file = open(file_name, "w")
+        file.write(np.array2string(self.max_height[3], threshold=sys.maxsize))
+        file.close()
 
 
 if __name__ == '__main__':

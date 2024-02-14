@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,6 +10,8 @@ from matplotlib import colors
 
 from mpl_toolkits.mplot3d.axes3d import Axes3D
 
+import os
+
 colors_list = ['#0092df', '#2efe00', "#feea00", '#ffa000', '#fe0000', '#fe0000']
 cmap_imshow = colors.LinearSegmentedColormap.from_list("tsunami", colors_list)
 
@@ -18,18 +20,19 @@ class PlotBuilder:
     def __init__(self):
         self.figure = plt.Figure()
 
+        self.canvas = FigureCanvas(self.figure)
+        self.toolbar: NavigationToolbar = NavigationToolbar(self.canvas)
+        self.container: QtWidgets.QWidget | None = None
+
     def get_widget(self):
-        canvas = FigureCanvas(self.figure)
-        toolbar = NavigationToolbar(canvas)
-
         layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(toolbar)
-        layout.addWidget(canvas)
+        layout.addWidget(self.toolbar)
+        layout.addWidget(self.canvas)
 
-        container = QtWidgets.QWidget()
-        container.setLayout(layout)
+        self.container = QtWidgets.QWidget()
+        self.container.setLayout(layout)
 
-        return container
+        return self.container
 
 
 class HeatmapPlotBuilder(PlotBuilder):
@@ -47,8 +50,8 @@ class HeatmapPlotBuilder(PlotBuilder):
 
         self.figure.colorbar(data, fraction=0.046, pad=0.04)
 
-    def get_input_points(self):
-        points = self.figure.ginput(n=-1, timeout=-1, show_clicks=True,
+    def get_input_points(self, n=-1):
+        points = self.figure.ginput(n=n, timeout=-1, show_clicks=True,
                                     mouse_stop=MouseButton.RIGHT,
                                     mouse_pop=MouseButton.MIDDLE)
         return points
@@ -86,8 +89,9 @@ class HeatmapContourPlotBuilder(HeatmapPlotBuilder):
 
 
 class BarPlotBuilder(PlotBuilder):
-    def __init__(self, plot_data):
+    def __init__(self, plot_data, save_data_callback):
         super().__init__()
+        self.toolbar: NavigationToolbar = ToolbarWithSaveData(self.canvas, save_data_callback)
 
         self.axes = self.figure.add_subplot(111)
         x = range(len(plot_data))
@@ -158,3 +162,15 @@ class MarigramsPlotBuilder(PlotBuilder):
             self.axes[-1].spines['bottom'].set_visible(True)
 
         self.figure.subplots_adjust(right=0.83)
+
+
+class ToolbarWithSaveData(NavigationToolbar):
+    toolitems = [*NavigationToolbar.toolitems,
+                 ('SaveData', 'Save data', str(os.getcwd()) + '\\resources\\save_file_icon', 'save_data')]
+
+    def __init__(self, canvas, save_data_callback):
+        super().__init__(canvas)
+        self.save_data_callback = save_data_callback
+
+    def save_data(self):
+        self.save_data_callback()
