@@ -40,7 +40,7 @@ class HeatmapPlotBuilder(PlotBuilder):
     def __init__(self, plot_data, default_cmap=True):
         super().__init__()
         self.line = None
-        self.scatter_points: matplotlib.collections.PatchCollection | None = None
+        self.scatter_points: list = []
         self.ellipse = None
         self.source_center = None
         self.patches = []
@@ -65,7 +65,7 @@ class HeatmapPlotBuilder(PlotBuilder):
         for p in points:
             xs.append(p[0])
             ys.append(p[1])
-        self.scatter_points = self.axes.scatter(x=xs, y=ys, marker="+", c=color)
+            self.scatter_points.append(self.axes.scatter(x=p[0], y=p[1], marker="+", c=color))
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
 
@@ -91,10 +91,12 @@ class HeatmapPlotBuilder(PlotBuilder):
             self.ellipse.remove()
 
     def clear_points(self):
-        if self.scatter_points:
-            self.scatter_points.remove()
+        if len(self.scatter_points) > 0:
+            for point in self.scatter_points:
+                point.remove()
             self.figure.canvas.draw()
             self.figure.canvas.flush_events()
+            self.scatter_points = []
 
     def clear_line(self):
         self.line.remove()

@@ -275,9 +275,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             selected = self.height[[y for y in range(start_y, length, y_size)], int(point[0])]
             self.marigrams_plot_data.append(selected.tolist())
 
-        print(self.marigrams_plot_data)
-        print()
-        print(self.marigram_points)
         self.marigrams_plot = MarigramsPlotBuilder(x, self.marigrams_plot_data, self.marigram_points,
                                                    self.save_marigrams_data)
         self.plot_widget.add_plot("marigrams", self.marigrams_plot)
