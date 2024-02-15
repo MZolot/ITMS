@@ -1,4 +1,5 @@
-from PyQt5 import QtWidgets, QtGui
+import matplotlib.collections
+from PyQt5 import QtWidgets
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -38,6 +39,8 @@ class PlotBuilder:
 class HeatmapPlotBuilder(PlotBuilder):
     def __init__(self, plot_data, default_cmap=True):
         super().__init__()
+        self.line = None
+        self.scatter_points: matplotlib.collections.PatchCollection | None = None
         self.ellipse = None
         self.source_center = None
         self.patches = []
@@ -57,8 +60,12 @@ class HeatmapPlotBuilder(PlotBuilder):
         return points
 
     def draw_points(self, points, color='white'):
+        xs = []
+        ys = []
         for p in points:
-            self.axes.scatter(x=p[0], y=p[1], marker="+", c=color)
+            xs.append(p[0])
+            ys.append(p[1])
+        self.scatter_points = self.axes.scatter(x=xs, y=ys, marker="+", c=color)
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
 
@@ -70,11 +77,27 @@ class HeatmapPlotBuilder(PlotBuilder):
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
 
+    # def draw_line(self, x1, y1, x2, y2, color='white'):
+    #     self.line = self.figure.add_artist(lines.Line2D([x1, y1], [x2, y2], color=color))
+    #     self.figure.canvas.draw()
+    #     self.figure.canvas.flush_events()
+    #
+    #     self.axes.axline()
+
     def clear_source(self):
         if self.source_center:
             self.source_center[0].remove()
         if self.ellipse:
             self.ellipse.remove()
+
+    def clear_points(self):
+        if self.scatter_points:
+            self.scatter_points.remove()
+            self.figure.canvas.draw()
+            self.figure.canvas.flush_events()
+
+    def clear_line(self):
+        self.line.remove()
 
 
 class HeatmapContourPlotBuilder(HeatmapPlotBuilder):
@@ -134,8 +157,9 @@ class Heatmap3DPlotBuilder(PlotBuilder):
 
 
 class MarigramsPlotBuilder(PlotBuilder):
-    def __init__(self, x, plot_data, coordinates):
+    def __init__(self, xs, plot_data, coordinates, save_data_callback):
         super().__init__()
+        self.toolbar: NavigationToolbar = ToolbarWithSaveData(self.canvas, save_data_callback)
 
         n_marigrams = len(plot_data)
         self.axes = self.figure.subplots(n_marigrams)
@@ -146,7 +170,7 @@ class MarigramsPlotBuilder(PlotBuilder):
                 curr_ax = self.axes
             else:
                 curr_ax = self.axes[i]
-            curr_ax.plot(x, point_data)
+            curr_ax.plot(xs, point_data)
             curr_ax.set_title("x = {}, y = {}".format(int(point_coords[0]), int(point_coords[1])), x=1.11, y=0.2)
             curr_ax.set_ylim([-1, 1])
             curr_ax.label_outer()

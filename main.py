@@ -67,6 +67,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.draw_source()
         self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
 
+        self.wave_profile_end_points = []
+        self.bar_chart_data = None
         self.marigram_points = []
         self.isoline_levels = [0.005, 0.01, 0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1]
 
@@ -103,7 +105,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             lambda: self.plot_widget.set_plot("bottom"))
 
         self.action_select_points_on_area.triggered.connect(
-            lambda: self._select_marigram_points("bottom"))
+            lambda: self.get_marigram_points("bottom"))
         self.action_marigrams.triggered.connect(self._plot_marigrams)
 
         self.action_load_existing_results.triggered.connect(self._open_file_selection_menu)
@@ -165,6 +167,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.setCentralWidget(label_computation_info)
 
     def load_result(self):
+        self.marigram_points = []
         self._show_loading_screen()
 
         self.thread = QThread()
@@ -195,6 +198,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.max_height = loaded_files[self.file_names["max_height"]]
         self.height = loaded_files[self.file_names["height"]]
 
+        self.bar_chart_data = self.max_height[3]
+
         self.calculated = True
 
         self.heatmap_plot = HeatmapPlotBuilder(self.max_height, default_cmap=False)
@@ -202,7 +207,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                                                    levels=self.isoline_levels,
                                                                    use_default_cmap=False)
         self.heatmap_3d_plot = Heatmap3DPlotBuilder(self.max_height)
-        self.shore_bar_chart_plot = BarPlotBuilder(self.max_height[3], self.save_bar_chart_data)
+        self.shore_bar_chart_plot = BarPlotBuilder(self.bar_chart_data, self.save_bar_chart_data)
 
         self.plot_widget.add_plot("heatmap", self.heatmap_plot)
         self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
@@ -233,14 +238,16 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.action_select_points_on_heatmap.setEnabled(True)
         self.action_select_points_on_heatmap.triggered.connect(
-            lambda: self._select_marigram_points("heatmap"))
+            lambda: self.get_marigram_points("heatmap"))
+        self.action_draw_wave_profile.triggered.connect(self.draw_wave_profile)
 
         self.plot_widget.set_plot("heatmap")
         self.setCentralWidget(self.plot_widget.get_widget())
 
-    def _select_marigram_points(self, plot_name: str):
+    def get_marigram_points(self, plot_name: str):
         self.plot_widget.set_plot(plot_name)
-        plot = self.plot_widget.get_plot_by_name(plot_name)
+        plot: HeatmapPlotBuilder = self.plot_widget.get_plot_by_name(plot_name)
+        plot.clear_points()
         self.marigram_points = plot.get_input_points()
         plot.draw_points(self.marigram_points)
 
@@ -255,8 +262,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         for i in range(0, steps_total, steps_between):
             x.append(i * time_step)
 
-        plot_data = []
-        coordinates = []
+        self.marigrams_plot_data = []
         n_marigrams = len(self.marigram_points)
         length = len(self.height)
         y_size = self.ini_data_elements["y-size"].get_current_value()
@@ -267,10 +273,13 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             if start_y == y_size:
                 start_y = y_size - 1
             selected = self.height[[y for y in range(start_y, length, y_size)], int(point[0])]
-            plot_data.append(selected.tolist())
-            coordinates.append((point[0], point[1]))
+            self.marigrams_plot_data.append(selected.tolist())
 
-        self.marigrams_plot = MarigramsPlotBuilder(x, plot_data, coordinates)
+        print(self.marigrams_plot_data)
+        print()
+        print(self.marigram_points)
+        self.marigrams_plot = MarigramsPlotBuilder(x, self.marigrams_plot_data, self.marigram_points,
+                                                   self.save_marigrams_data)
         self.plot_widget.add_plot("marigrams", self.marigrams_plot)
         self.plot_widget.set_plot("marigrams")
 
@@ -285,6 +294,19 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             (self.ini_data_elements["ellipse half y length"].get_current_value() * 2) / y_step
         )
 
+    def draw_wave_profile(self):
+        self.plot_widget.set_plot("heatmap")
+        plot: HeatmapPlotBuilder = self.plot_widget.get_plot_by_name("heatmap")
+        plot.clear_points()
+        self.wave_profile_end_points = plot.get_input_points(n=2)
+        plot.draw_points(self.wave_profile_end_points)
+        # plot.draw_line(self.wave_profile_end_points[0][0], self.wave_profile_end_points[0][1],
+        #                self.wave_profile_end_points[1][0], self.wave_profile_end_points[1][1])
+
+        self.bar_chart_data = self.get_wave_profile_on_line()
+        self.shore_bar_chart_plot = BarPlotBuilder(self.bar_chart_data, self.save_bar_chart_data)
+        self.plot_widget.add_plot("bar", self.shore_bar_chart_plot)
+
     def update_isoline_levels(self):
         if not self.calculated:
             return
@@ -295,19 +317,98 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
         self.plot_widget.set_plot("heatmap contour")
 
-    def save_bar_chart_data(self):
+    def open_save_file_dialog(self):
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         file_name, _ = QtWidgets.QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", "",
                                                              "All Files (*);;Text Files (*.txt)", options=options)
+        return file_name
+
+    def save_bar_chart_data(self):
+        file_name = self.open_save_file_dialog()
         if not file_name:
             print("no file name")
             return
 
         print(file_name)
         file = open(file_name, "w")
-        file.write(np.array2string(self.max_height[3], threshold=sys.maxsize))
+        file.write(np.array2string(self.bar_chart_data, threshold=sys.maxsize))
         file.close()
+
+    def save_marigrams_data(self):
+        file_name = self.open_save_file_dialog()
+        if not file_name:
+            print("no file name")
+            return
+
+        file = open(file_name, "w")
+        for i in range(len(self.marigram_points)):
+            s = str(self.marigram_points[i]) + " " + str(self.marigrams_plot_data[i]) + '\n'
+            file.write(s)
+
+        file.close()
+
+    def get_wave_profile_on_line(self):
+        print(self.wave_profile_end_points)
+        x1 = round(self.wave_profile_end_points[0][0])
+        y1 = round(self.wave_profile_end_points[0][1])
+        x2 = round(self.wave_profile_end_points[1][0])
+        y2 = round(self.wave_profile_end_points[1][1])
+
+        x_len = x2 - x1
+        y_len = y2 - y1
+
+        data = []
+
+        if abs(x_len) >= abs(y_len):
+            x_step = 1
+            y_step = y_len / abs(x_len)
+
+            if x1 < x2:
+                curr_x = x1
+                curr_y = y1
+                fin = x2
+            else:
+                curr_x = x2
+                curr_y = y2
+                fin = x1
+                y_step *= -1
+
+            curr = curr_x
+        else:
+            y_step = 1
+            x_step = x_len / abs(y_len)
+
+            if y1 < y2:
+                curr_x = x1
+                curr_y = y1
+                fin = y2
+            else:
+                curr_x = x2
+                curr_y = y2
+                fin = y1
+                x_step *= -1
+
+            curr = curr_y
+
+        while abs(curr - fin) > 0:
+            curr_x += x_step
+            curr_y += y_step
+            curr += 1
+            try:
+                data.append(self.max_height[round(curr_y), round(curr_x)])
+            except IndexError:
+                print("ERROR")
+                print(self.wave_profile_end_points)
+                print("steps: " + str((x_step, y_step)))
+                print("lens: " + str((x_len, y_len)))
+                print(curr)
+                print(curr_x)
+                print(curr_y)
+                print('\n')
+                return self.bar_chart_data
+
+        return data
 
 
 if __name__ == '__main__':
