@@ -1,8 +1,8 @@
 import ui_elements.qt_designer_ui.main_ui as main_ui
 from data_entry import DataEntry
-from ui_elements.load_data_file_selection_menu import *
-from ui_elements.input_menu import *
-from ui_elements.computation_in_process_screen import *
+from ui_elements.load_data_file_selection_dialog import *
+from ui_elements.input_dialog import *
+from ui_elements.waiting_screens import *
 from ui_elements.isoline_settings_dialog import *
 from file_loader import *
 from plots.stacked_plots_widget import PlotWidget
@@ -13,7 +13,7 @@ from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            MarigramsPlotBuilder)
 
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QProcess, Qt, QThread
+from PyQt5.QtCore import QProcess, QThread
 
 import numpy as np
 
@@ -51,7 +51,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                                                     element["is_float"])
 
         self.input_menus_elements = {
-            "area": ["x-size", "y-size", "x-step", "y-step"],
+            "area": ["x-size", "y-size", "x-step", "y-step", "lowest depth"],
             "size": ["x-size", "y-size"],
             "steps": ["x-step", "y-step"],
             "source": ["max elevation at source", "ellipse half x length", "ellipse half y length",
@@ -162,9 +162,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.setCentralWidget(self.calculation_screen.get_screen())
 
     def _show_loading_screen(self):
-        label_computation_info = QtWidgets.QLabel("Loading results... Please wait.")
-        label_computation_info.setAlignment(Qt.AlignCenter)
-        self.setCentralWidget(label_computation_info)
+        loading_screen = LoadingScreen()
+        self.setCentralWidget(loading_screen.get_screen())
 
     def load_result(self):
         self.marigram_points = []
@@ -187,7 +186,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             parameter.set_current_value(new_value)
 
     def show_result(self):
-        print("show result")
         self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
         self.draw_source()
         self.plot_widget = PlotWidget({"bottom": self.bottom_plot})

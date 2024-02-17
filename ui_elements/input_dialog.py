@@ -1,19 +1,22 @@
 import ui_elements.qt_designer_ui.input_menu_ui as menu_ui
+import ui_elements.qt_designer_ui.error_dialog as error_ui
+from data_entry import DataEntry
 from PyQt5 import QtWidgets
 
 
 class InputMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
-    def __init__(self, data_elements, title):
+    def __init__(self, data_elements: list[DataEntry], title):
         self.data_elements = data_elements
 
         super().__init__()
         self.setupUi(self)
+
         self.line_edits = []
         self.title = title
-        self.__set_layout(self.data_elements)
-        self.pushButton_ok.clicked.connect(self._ok_button_pushed)
+        self.set_layout(self.data_elements)
+        self.pushButton_ok.clicked.connect(self.ok_button_pushed)
 
-    def __set_layout(self, data_elements):
+    def set_layout(self, data_elements):
         for i in range(len(data_elements)):
             p = data_elements[i]
 
@@ -38,11 +41,19 @@ class InputMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
 
             self.setWindowTitle(self.title)
 
-    def _ok_button_pushed(self):
+    def ok_button_pushed(self):
         for i in range(len(self.data_elements)):
             new_value = self.line_edits[i].text()
-            if new_value != "":
-                self.data_elements[i].set_current_value(new_value)
+            if new_value == "":
+                continue
+            try:
+                new_value_float = float(new_value)
+            except ValueError:
+                error_dialog = ErrorDialog(self.data_elements[i].name)
+                error_dialog.exec()
+                return
+            self.data_elements[i].set_current_value(new_value_float)
+
         self.close()
 
 
@@ -51,6 +62,20 @@ class SourceMenuDialog(InputMenuDialog):
         super().__init__(data_elements, title)
         self.app = app
 
-    def _ok_button_pushed(self):
-        super()._ok_button_pushed()
+    def ok_button_pushed(self):
+        super().ok_button_pushed()
         self.app.draw_source()
+
+
+class ErrorDialog(QtWidgets.QDialog, error_ui.Ui_Dialog):
+    def __init__(self, error_field_name: str):
+        super().__init__()
+        self.setupUi(self)
+
+        line = f"Incorrect value for {error_field_name}!\nPlease enter floating number or nothing."
+        self.label.setText(line)
+
+        self.push_button.clicked.connect(self.ok_button_pushed)
+
+    def ok_button_pushed(self):
+        self.close()

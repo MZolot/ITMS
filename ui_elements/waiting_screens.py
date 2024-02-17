@@ -31,3 +31,12 @@ class ComputationScreen:
 
     def update_progress_bar(self, new_value):
         self.pbar.setValue(int(new_value))
+
+
+class LoadingScreen:
+    def __init__(self):
+        self.label_loading_info = QtWidgets.QLabel("Loading results... Please wait.")
+        self.label_loading_info.setAlignment(Qt.AlignCenter)
+
+    def get_screen(self):
+        return self.label_loading_info
