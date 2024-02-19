@@ -58,13 +58,13 @@ class HeatmapPlotBuilder(PlotBuilder):
                                     mouse_pop=MouseButton.MIDDLE)
         return points
 
-    def draw_points(self, points, color='white'):
+    def draw_points(self, points, color='white', marker="+"):
         xs = []
         ys = []
         for p in points:
             xs.append(p[0])
             ys.append(p[1])
-            self.scatter_points.append(self.axes.scatter(x=p[0], y=p[1], marker="+", c=color))
+            self.scatter_points.append(self.axes.scatter(x=p[0], y=p[1], marker=marker, c=color))
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
 
@@ -76,12 +76,10 @@ class HeatmapPlotBuilder(PlotBuilder):
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
 
-    # def draw_line(self, x1, y1, x2, y2, color='white'):
-    #     self.line = self.figure.add_artist(lines.Line2D([x1, y1], [x2, y2], color=color))
-    #     self.figure.canvas.draw()
-    #     self.figure.canvas.flush_events()
-    #
-    #     self.axes.axline()
+    def draw_line(self, x1, y1, x2, y2, color='white'):
+        self.axes.plot([x1, x2], [y1, y2], marker='o', color=color)
+        self.figure.canvas.draw()
+        self.figure.canvas.flush_events()
 
     def clear_source(self):
         if self.source_center:
@@ -110,16 +108,6 @@ class HeatmapContourPlotBuilder(HeatmapPlotBuilder):
             self.axes.contourf(plot_data, levels=levels)
         else:
             self.axes.contourf(plot_data, levels=levels, cmap=cmap_imshow)
-
-
-class BarPlotBuilder(PlotBuilder):
-    def __init__(self, plot_data, save_data_callback):
-        super().__init__()
-        self.toolbar: NavigationToolbar = ToolbarWithSaveData(self.canvas, save_data_callback)
-
-        self.axes = self.figure.add_subplot(111)
-        x = range(len(plot_data))
-        self.axes.bar(x, plot_data)
 
 
 class Heatmap3DPlotBuilder(PlotBuilder):
@@ -155,6 +143,16 @@ class Heatmap3DPlotBuilder(PlotBuilder):
         self.axes.grid(False)
         self.figure.colorbar(data, fraction=0.046, pad=0.04)
         # self.axes.plot_surface(x_arranged, y_arranged, plot_data, cmap=colormaps.viridis)
+
+
+class BarPlotBuilder(PlotBuilder):
+    def __init__(self, plot_data, save_data_callback):
+        super().__init__()
+        self.toolbar: NavigationToolbar = ToolbarWithSaveData(self.canvas, save_data_callback)
+
+        self.axes = self.figure.add_subplot(111)
+        x = range(len(plot_data))
+        self.axes.bar(x, plot_data)
 
 
 class MarigramsPlotBuilder(PlotBuilder):

@@ -1,9 +1,9 @@
 import ui_elements.qt_designer_ui.main_ui as main_ui
-from data_entry import DataEntry
 from ui_elements.load_data_file_selection_dialog import *
-from ui_elements.input_dialog import *
+from ui_elements.input_dialog import InputMenuDialog, SourceMenuDialog
 from ui_elements.waiting_screens import *
-from ui_elements.isoline_settings_dialog import *
+from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
+from data_entry import DataEntry
 from file_loader import *
 from plots.stacked_plots_widget import PlotWidget
 from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
@@ -11,6 +11,7 @@ from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            Heatmap3DPlotBuilder,
                                            BarPlotBuilder,
                                            MarigramsPlotBuilder)
+from plots.pyqtgraph_plot_builder import QTGraphHeatmap3DPlotBuilder
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QProcess, QThread
@@ -90,6 +91,9 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     def _complete_ui(self):
         self.setCentralWidget(self.plot_widget.get_widget())
         self.draw_source()
+
+        # graph = QTGraphHeatmap3DPlotBuilder(self.bottom_map)
+        # self.setCentralWidget(graph.get_widget())
 
         self.action_size.triggered.connect(
             lambda: self._open_input_menu(self.input_menus_elements["size"], "Size parameters"))
@@ -215,7 +219,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_heatmap.setEnabled(True)
         self.action_heatmap_with_contour.setEnabled(True)
         self.action_3d_heatmap.setEnabled(True)
-        self.action_shore_bar_chart.setEnabled(True)
+        self.action_wave_profile_bar_chart.setEnabled(True)
         self.action_draw_wave_profile.setEnabled(True)
 
         if self.marigram_points:
@@ -230,7 +234,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_heatmap_with_contour.triggered.connect(
             lambda: self.plot_widget.set_plot("heatmap contour")
         )
-        self.action_shore_bar_chart.triggered.connect(
+        self.action_wave_profile_bar_chart.triggered.connect(
             lambda: self.plot_widget.set_plot("bar")
         )
 
@@ -294,9 +298,9 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         plot: HeatmapPlotBuilder = self.plot_widget.get_plot_by_name("heatmap")
         plot.clear_points()
         self.wave_profile_end_points = plot.get_input_points(n=2)
-        plot.draw_points(self.wave_profile_end_points)
-        # plot.draw_line(self.wave_profile_end_points[0][0], self.wave_profile_end_points[0][1],
-        #                self.wave_profile_end_points[1][0], self.wave_profile_end_points[1][1])
+        # plot.draw_points(self.wave_profile_end_points)
+        plot.draw_line(self.wave_profile_end_points[0][0], self.wave_profile_end_points[0][1],
+                       self.wave_profile_end_points[1][0], self.wave_profile_end_points[1][1])
 
         self.bar_chart_data = self.get_wave_profile_on_line()
         self.shore_bar_chart_plot = BarPlotBuilder(self.bar_chart_data, self.save_bar_chart_data)
@@ -357,7 +361,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         if abs(x_len) >= abs(y_len):
             x_step = 1
-            y_step = y_len / abs(x_len)
+            y_step = y_len / x_len
 
             if x1 < x2:
                 curr_x = x1
@@ -367,12 +371,11 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                 curr_x = x2
                 curr_y = y2
                 fin = x1
-                y_step *= -1
 
             curr = curr_x
         else:
             y_step = 1
-            x_step = x_len / abs(y_len)
+            x_step = x_len / y_len
 
             if y1 < y2:
                 curr_x = x1
@@ -382,7 +385,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                 curr_x = x2
                 curr_y = y2
                 fin = y1
-                x_step *= -1
 
             curr = curr_y
 

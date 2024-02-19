@@ -27,13 +27,13 @@
     <property name="title">
      <string>Area</string>
     </property>
-    <widget class="QMenu" name="menuBottom_profile">
+    <widget class="QMenu" name="menu_bottom_profile">
      <property name="title">
       <string>Bottom profile...</string>
      </property>
      <addaction name="action_default"/>
     </widget>
-    <addaction name="menuBottom_profile"/>
+    <addaction name="menu_bottom_profile"/>
     <addaction name="separator"/>
     <addaction name="action_size"/>
     <addaction name="action_steps"/>
@@ -75,7 +75,7 @@
     <addaction name="action_heatmap"/>
     <addaction name="action_heatmap_with_contour"/>
     <addaction name="action_3d_heatmap"/>
-    <addaction name="action_shore_bar_chart"/>
+    <addaction name="action_wave_profile_bar_chart"/>
     <addaction name="separator"/>
     <addaction name="action_marigrams"/>
     <addaction name="separator"/>
@@ -125,12 +125,12 @@
     <string>3D heatmap</string>
    </property>
   </action>
-  <action name="action_shore_bar_chart">
+  <action name="action_wave_profile_bar_chart">
    <property name="enabled">
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Shore bar chart</string>
+    <string>Wave profile</string>
    </property>
   </action>
   <action name="action_marigrams">

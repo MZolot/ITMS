@@ -43,7 +43,7 @@ class Ui_Dialog(object):
         self.verticalLayout_2.addWidget(self.button_box, 0, QtCore.Qt.AlignHCenter)
 
         self.retranslateUi(Dialog)
-        self.button_box.accepted.connect(Dialog.accept) # type: ignore
+        # self.button_box.accepted.connect(Dialog.accept) # type: ignore
         self.button_box.rejected.connect(Dialog.reject) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 

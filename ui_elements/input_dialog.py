@@ -47,12 +47,17 @@ class InputMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
             if new_value == "":
                 continue
             try:
-                new_value_float = float(new_value)
+                float(new_value)
             except ValueError:
                 error_dialog = ErrorDialog(self.data_elements[i].name)
                 error_dialog.exec()
                 return
-            self.data_elements[i].set_current_value(new_value_float)
+
+        for i in range(len(self.data_elements)):
+            new_value = self.line_edits[i].text()
+            if new_value != "":
+                new_value_float = float(self.line_edits[i].text())
+                self.data_elements[i].set_current_value(new_value_float)
 
         self.close()
 
