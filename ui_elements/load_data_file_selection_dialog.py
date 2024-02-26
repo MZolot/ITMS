@@ -20,13 +20,13 @@ class FileSelectionMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
         self.label_height_file_name.setText(self.height_file_name)
         self.label_max_height_file_name.setText(self.max_height_file_name)
 
-        self.label_ini_data_file_name.setMaximumWidth(100)
-        self.label_height_file_name.setMaximumWidth(100)
-        self.label_max_height_file_name.setMaximumWidth(100)
-
         self.push_button_initial.clicked.connect(lambda: self.open_file_name_dialog("initial"))
         self.push_button_height.clicked.connect(lambda: self.open_file_name_dialog("height"))
         self.push_button_max_height.clicked.connect(lambda: self.open_file_name_dialog("max_height"))
+
+        self.push_button_initial.setMaximumWidth(100)
+        self.push_button_height.setMaximumWidth(100)
+        self.push_button_max_height.setMaximumWidth(100)
 
         self.push_button_ok.clicked.connect(self._ok_button_pushed)
 

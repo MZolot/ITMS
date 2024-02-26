@@ -1,0 +1,93 @@
+[
+    {
+        "name": "L",
+        "label_text": "Length (km)",
+        "unit": "",
+        "is_float": true,
+        "default_value": 100
+    },
+    {
+        "name": "W",
+        "label_text": "Width (km)",
+        "unit": "",
+        "is_float": true,
+        "default_value": 40
+    },
+    {
+        "name": "DE",
+        "label_text": "DE",
+        "unit": "",
+        "is_float": true,
+        "default_value": 90
+    },
+    {
+        "name": "LA",
+        "label_text": "LA",
+        "unit": "",
+        "is_float": true,
+        "default_value": 90
+    },
+    {
+        "name": "TE",
+        "label_text": "TE",
+        "unit": "",
+        "is_float": true,
+        "default_value": 0
+    },
+    {
+        "name": "D0",
+        "label_text": "D0 (m)",
+        "unit": "",
+        "is_float": true,
+        "default_value": 2
+    },
+    {
+        "name": "h0",
+        "label_text": "h0 (km)",
+        "unit": "",
+        "is_float": true,
+        "default_value": 20
+    },
+    {
+        "name": "N1",
+        "label_text": "N1",
+        "unit": "",
+        "is_float": false,
+        "default_value": 101
+    },
+    {
+        "name": "M1",
+        "label_text": "M1",
+        "unit": "",
+        "is_float": false,
+        "default_value": 101
+    },
+    {
+        "name": "Dx",
+        "label_text": "Dx (m)",
+        "unit": "",
+        "is_float": true,
+        "default_value": 4
+    },
+    {
+        "name": "Dy",
+        "label_text": "Dy (km)",
+        "unit": "",
+        "is_float": true,
+        "default_value": 4
+    },
+    {
+        "name": "jj",
+        "label_text": "jj",
+        "unit": "",
+        "is_float": false,
+        "default_value": 21
+    },
+    {
+        "name": "kk",
+        "label_text": "kk",
+        "unit": "",
+        "is_float": false,
+        "default_value": 21
+    }
+]

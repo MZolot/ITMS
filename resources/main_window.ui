@@ -67,6 +67,8 @@
     <addaction name="action_calculate"/>
     <addaction name="separator"/>
     <addaction name="action_load_existing_results"/>
+    <addaction name="separator"/>
+    <addaction name="action_static"/>
    </widget>
    <widget class="QMenu" name="menu_visualisation">
     <property name="title">
@@ -209,6 +211,11 @@
    </property>
    <property name="text">
     <string>Draw wave profile</string>
+   </property>
+  </action>
+  <action name="action_static">
+   <property name="text">
+    <string>STATIC</string>
    </property>
   </action>
  </widget>

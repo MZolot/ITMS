@@ -3,6 +3,7 @@ from ui_elements.load_data_file_selection_dialog import *
 from ui_elements.input_dialog import InputMenuDialog, SourceMenuDialog
 from ui_elements.waiting_screens import *
 from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
+from ui_elements.static_settings_dialog import StaticSettingsDialog
 from data_entry import DataEntry
 from file_loader import *
 from plots.stacked_plots_widget import PlotWidget
@@ -21,7 +22,8 @@ import numpy as np
 import sys
 import json
 
-ini_data_elements_file_name = "resources/ini_data_elements.json"
+most_parameters_file_name = "resources/most_parameters.json"
+static_parameters_file_name = "resources/static_parameters.json"
 
 executable_file_name = "MOST/wave_1500x900_01.exe"
 
@@ -43,21 +45,34 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         }
 
         # можно будет добавить кнопку reset для возвращения к начальному значению
-        self.ini_data_elements = {}
-        with open(ini_data_elements_file_name, 'r') as j:
+        self.most_ini_data_elements = {}
+        with open(most_parameters_file_name, 'r') as j:
             from_json = json.loads(j.read())
             for element in from_json:
-                self.ini_data_elements[element["name"]] = DataEntry(element["name"], element["label_text"],
-                                                                    element["default_value"], element["unit"],
-                                                                    element["is_float"])
+                self.most_ini_data_elements[element["name"]] = DataEntry(element["name"], element["label_text"],
+                                                                         element["default_value"], element["unit"],
+                                                                         element["is_float"])
 
-        self.input_menus_elements = {
+        self.most_input_menu_to_elements = {
             "area": ["x-size", "y-size", "x-step", "y-step", "lowest depth"],
             "size": ["x-size", "y-size"],
             "steps": ["x-step", "y-step"],
             "source": ["max elevation at source", "ellipse half x length", "ellipse half y length",
                        "ellipse center x location", "ellipse center y location", "lowest depth"],
             "calculation": ["time step", "number of time steps", "number of steps between surface output"]
+        }
+
+        self.static_ini_data_elements: dict[str, DataEntry] = {}
+        with open(static_parameters_file_name, 'r') as j:
+            from_json = json.loads(j.read())
+            for element in from_json:
+                self.static_ini_data_elements[element["name"]] = DataEntry(element["name"], element["label_text"],
+                                                                           element["default_value"], element["unit"],
+                                                                           element["is_float"])
+
+        self.static_input_menu_to_elements = {
+            "fault": ["L", "W", "DE", "LA", "TE", "D0", "h0"],
+            "calculation": ["N1", "M1", "Dx", "Dy", "jj", "kk"]
         }
 
         self.bottom_profile = np.loadtxt(bottom_profile_file_name)
@@ -96,13 +111,13 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         # self.setCentralWidget(graph.get_widget())
 
         self.action_size.triggered.connect(
-            lambda: self._open_input_menu(self.input_menus_elements["size"], "Size parameters"))
+            lambda: self.open_input_menu(self.most_input_menu_to_elements["size"], "Size parameters"))
         self.action_steps.triggered.connect(
-            lambda: self._open_input_menu(self.input_menus_elements["steps"], "Steps parameters"))
+            lambda: self.open_input_menu(self.most_input_menu_to_elements["steps"], "Steps parameters"))
         self.action_source_parameters.triggered.connect(
-            lambda: self._open_input_menu(self.input_menus_elements["source"], "Source parameters", True))
+            lambda: self.open_input_menu(self.most_input_menu_to_elements["source"], "Source parameters", True))
         self.action_calculation_parameters.triggered.connect(
-            lambda: self._open_input_menu(self.input_menus_elements["calculation"], "Calculation parameters"))
+            lambda: self.open_input_menu(self.most_input_menu_to_elements["calculation"], "Calculation parameters"))
         self.action_calculate.triggered.connect(self._calculate)
 
         self.action_show_area.triggered.connect(
@@ -112,31 +127,33 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             lambda: self.get_marigram_points("bottom"))
         self.action_marigrams.triggered.connect(self._plot_marigrams)
 
-        self.action_load_existing_results.triggered.connect(self._open_file_selection_menu)
-        self.action_set_contour_lines_levels.triggered.connect(self._open_isoline_settings_menu)
+        self.action_load_existing_results.triggered.connect(self.open_file_selection_menu)
+        self.action_set_contour_lines_levels.triggered.connect(self.open_isoline_settings_menu)
 
-    def _open_input_menu(self, element_names, title, source=False):
+        self.action_static.triggered.connect(self.open_static_settings_dialog)
+
+    def open_input_menu(self, element_names, title, source=False):
         elements = []
         for n in element_names:
-            elements.append(self.ini_data_elements[n])
+            elements.append(self.most_ini_data_elements[n])
         if source:
             menu = SourceMenuDialog(elements, title, self)
         else:
             menu = InputMenuDialog(elements, title)
         menu.exec()
 
-    def _open_isoline_settings_menu(self):
+    def open_isoline_settings_menu(self):
         menu = IsolineSettingsDialog(self.isoline_levels, self.update_isoline_levels)
         menu.exec()
 
-    def _open_file_selection_menu(self):
+    def open_file_selection_menu(self):
         menu = FileSelectionMenuDialog(self.file_names, self.load_result)
         menu.exec()
 
     def _save_all_parameters(self):
         ini_data_file = open(self.file_names["initial"], "w")
 
-        for i in self.ini_data_elements.values():
+        for i in self.most_ini_data_elements.values():
             input_data = str(i.get_current_value()) + "  --  " + i.label_text + '\n'
             ini_data_file.write(input_data)
         ini_data_file.close()
@@ -161,7 +178,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             self.calculation_screen.update_progress_bar(int(stdout))
 
     def _show_calculation_screen(self):
-        steps = self.ini_data_elements["number of time steps"].get_current_value()
+        steps = self.most_ini_data_elements["number of time steps"].get_current_value()
         self.calculation_screen = ComputationScreen(steps)
         self.setCentralWidget(self.calculation_screen.get_screen())
 
@@ -185,7 +202,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def parse_initial_data_file(self):
         f = open(self.file_names["initial"], "r")
-        for parameter in self.ini_data_elements.values():
+        for parameter in self.most_ini_data_elements.values():
             new_value = f.readline().split()[0]
             parameter.set_current_value(new_value)
 
@@ -258,16 +275,16 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def _plot_marigrams(self):
         x = []
-        time_step = self.ini_data_elements["time step"].get_current_value()
-        steps_total = self.ini_data_elements["number of time steps"].get_current_value()
-        steps_between = self.ini_data_elements["number of steps between surface output"].get_current_value()
+        time_step = self.most_ini_data_elements["time step"].get_current_value()
+        steps_total = self.most_ini_data_elements["number of time steps"].get_current_value()
+        steps_between = self.most_ini_data_elements["number of steps between surface output"].get_current_value()
         for i in range(0, steps_total, steps_between):
             x.append(i * time_step)
 
         self.marigrams_plot_data = []
         n_marigrams = len(self.marigram_points)
         length = len(self.height)
-        y_size = self.ini_data_elements["y-size"].get_current_value()
+        y_size = self.most_ini_data_elements["y-size"].get_current_value()
 
         for i in range(n_marigrams):
             point = self.marigram_points[i]
@@ -283,14 +300,14 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.plot_widget.set_plot("marigrams")
 
     def draw_source(self):
-        x = self.ini_data_elements["ellipse center x location"].get_current_value()
-        y = self.ini_data_elements["ellipse center y location"].get_current_value()
-        x_step = self.ini_data_elements["x-step"].get_current_value()
-        y_step = self.ini_data_elements["y-step"].get_current_value()
+        x = self.most_ini_data_elements["ellipse center x location"].get_current_value()
+        y = self.most_ini_data_elements["ellipse center y location"].get_current_value()
+        x_step = self.most_ini_data_elements["x-step"].get_current_value()
+        y_step = self.most_ini_data_elements["y-step"].get_current_value()
         self.bottom_plot.draw_source(
             (x, y),
-            (self.ini_data_elements["ellipse half x length"].get_current_value() * 2) / x_step,
-            (self.ini_data_elements["ellipse half y length"].get_current_value() * 2) / y_step
+            (self.most_ini_data_elements["ellipse half x length"].get_current_value() * 2) / x_step,
+            (self.most_ini_data_elements["ellipse half y length"].get_current_value() * 2) / y_step
         )
 
     def draw_wave_profile(self):
@@ -406,6 +423,19 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                 return self.bar_chart_data
 
         return data
+
+    def open_static_settings_dialog(self):
+        fault_parameters = [self.static_ini_data_elements[p] for p in
+                            self.static_input_menu_to_elements["fault"]]
+        calculation_parameters = [self.static_ini_data_elements[p] for p in
+                                  self.static_input_menu_to_elements["calculation"]]
+        dialog = StaticSettingsDialog(self.static_ini_data_elements, self.static_input_menu_to_elements, self.run_static)
+        dialog.exec()
+
+    def run_static(self):
+        print("static")
+        for p in self.static_ini_data_elements.keys():
+            print(f'{p} = {str(self.static_ini_data_elements[p].get_current_value())}')
 
 
 if __name__ == '__main__':
