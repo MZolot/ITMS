@@ -12,7 +12,7 @@ from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            Heatmap3DPlotBuilder,
                                            BarPlotBuilder,
                                            MarigramsPlotBuilder)
-from plots.pyqtgraph_plot_builder import QTGraphHeatmap3DPlotBuilder
+# from plots.pyqtgraph_plot_builder import QTGraphHeatmap3DPlotBuilder
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QProcess, QThread
@@ -21,17 +21,21 @@ import numpy as np
 
 import sys
 import json
+import struct
 
-most_parameters_file_name = "resources/most_parameters.json"
-static_parameters_file_name = "resources/static_parameters.json"
-
-executable_file_name = "MOST/wave_1500x900_01.exe"
+most_config_file_name = "resources/most_parameters_config.json"
+most_ini_data_default_file_name = "MOST/ini_data.txt"
+most_exe_file_name = "MOST/wave_1500x900_01.exe"
 
 bottom_profile_file_name = "MOST/koryto_profile.txt"
 
-ini_data_default_file_name = "MOST/ini_data.txt"
 height_default_file_name = "MOST/heigh.dat"
 max_height_default_file_name = "MOST/maxheigh.dat"
+
+static_config_file_name = "resources/static_parameters_config.json"
+static_ini_data_default_file_name = "STATIC/static_param.txt"
+static_exe_file_name = "STATIC/Static.exe"
+static_results_file_name = "STATIC/static.bin"
 
 
 class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
@@ -39,14 +43,15 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         super().__init__()
 
         self.file_names = {
-            "initial": ini_data_default_file_name,
+            "most_initial": most_ini_data_default_file_name,
             "height": height_default_file_name,
-            "max_height": max_height_default_file_name
+            "max_height": max_height_default_file_name,
+            "static_initial": static_ini_data_default_file_name
         }
 
         # можно будет добавить кнопку reset для возвращения к начальному значению
-        self.most_ini_data_elements = {}
-        with open(most_parameters_file_name, 'r') as j:
+        self.most_ini_data_elements: dict[str, DataEntry] = {}
+        with open(most_config_file_name, 'r') as j:
             from_json = json.loads(j.read())
             for element in from_json:
                 self.most_ini_data_elements[element["name"]] = DataEntry(element["name"], element["label_text"],
@@ -63,7 +68,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         }
 
         self.static_ini_data_elements: dict[str, DataEntry] = {}
-        with open(static_parameters_file_name, 'r') as j:
+        with open(static_config_file_name, 'r') as j:
             from_json = json.loads(j.read())
             for element in from_json:
                 self.static_ini_data_elements[element["name"]] = DataEntry(element["name"], element["label_text"],
@@ -94,11 +99,16 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.max_height = None
         self.thread = None
         self.loader = None
+        self.static_results = None
+        self.isoline_plot_data = None
 
         self.heatmap_plot = None
         self.heatmap_with_contour_plot = None
         self.heatmap_3d_plot = None
         self.shore_bar_chart_plot = None
+
+        self.process: QProcess = QProcess()
+        self.calculation_screen = None
 
         self.setupUi(self)
         self._complete_ui()
@@ -111,14 +121,15 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         # self.setCentralWidget(graph.get_widget())
 
         self.action_size.triggered.connect(
-            lambda: self.open_input_menu(self.most_input_menu_to_elements["size"], "Size parameters"))
+            lambda: self.open_most_input_menu(self.most_input_menu_to_elements["size"], "Size parameters"))
         self.action_steps.triggered.connect(
-            lambda: self.open_input_menu(self.most_input_menu_to_elements["steps"], "Steps parameters"))
+            lambda: self.open_most_input_menu(self.most_input_menu_to_elements["steps"], "Steps parameters"))
         self.action_source_parameters.triggered.connect(
-            lambda: self.open_input_menu(self.most_input_menu_to_elements["source"], "Source parameters", True))
+            lambda: self.open_most_input_menu(self.most_input_menu_to_elements["source"], "Source parameters", True))
         self.action_calculation_parameters.triggered.connect(
-            lambda: self.open_input_menu(self.most_input_menu_to_elements["calculation"], "Calculation parameters"))
-        self.action_calculate.triggered.connect(self._calculate)
+            lambda: self.open_most_input_menu(self.most_input_menu_to_elements["calculation"],
+                                              "Calculation parameters"))
+        self.action_calculate.triggered.connect(self.calculate_most)
 
         self.action_show_area.triggered.connect(
             lambda: self.plot_widget.set_plot("bottom"))
@@ -132,7 +143,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.action_static.triggered.connect(self.open_static_settings_dialog)
 
-    def open_input_menu(self, element_names, title, source=False):
+    def open_most_input_menu(self, element_names, title, source=False):
         elements = []
         for n in element_names:
             elements.append(self.most_ini_data_elements[n])
@@ -147,28 +158,28 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         menu.exec()
 
     def open_file_selection_menu(self):
-        menu = FileSelectionMenuDialog(self.file_names, self.load_result)
+        menu = FileSelectionMenuDialog(self.file_names, self.load_most_result)
         menu.exec()
 
-    def _save_all_parameters(self):
-        ini_data_file = open(self.file_names["initial"], "w")
+    def save_most_parameters(self):
+        ini_data_file = open(self.file_names["most_initial"], "w")
 
         for i in self.most_ini_data_elements.values():
             input_data = str(i.get_current_value()) + "  --  " + i.label_text + '\n'
             ini_data_file.write(input_data)
         ini_data_file.close()
 
-    def _calculate(self):
+    def calculate_most(self):
         # это должно работать, только если программа запущена в первый раз, или если данные изменились
-        self._save_all_parameters()
-        self._show_calculation_screen()
+        self.save_most_parameters()
+        self.show_most_calculation_screen()
 
-        commands = executable_file_name
+        commands = most_exe_file_name
 
         self.process = QProcess()
         self.process.setWorkingDirectory('MOST\\')
         self.process.readyReadStandardOutput.connect(self._update_progress)
-        self.process.finished.connect(self.load_result)
+        self.process.finished.connect(self.load_most_result)
         self.process.start(commands)
 
     def _update_progress(self):
@@ -177,16 +188,16 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         if stdout != '':
             self.calculation_screen.update_progress_bar(int(stdout))
 
-    def _show_calculation_screen(self):
+    def show_most_calculation_screen(self):
         steps = self.most_ini_data_elements["number of time steps"].get_current_value()
-        self.calculation_screen = ComputationScreen(steps)
+        self.calculation_screen = MOSTComputationScreen(steps)
         self.setCentralWidget(self.calculation_screen.get_screen())
 
     def _show_loading_screen(self):
         loading_screen = LoadingScreen()
         self.setCentralWidget(loading_screen.get_screen())
 
-    def load_result(self):
+    def load_most_result(self):
         self.marigram_points = []
         self._show_loading_screen()
 
@@ -200,8 +211,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.thread.finished.connect(self.show_result)
         self.thread.start()
 
-    def parse_initial_data_file(self):
-        f = open(self.file_names["initial"], "r")
+    def parse_initial_data_file(self):  # TODO: change to work for static
+        f = open(self.file_names["most_initial"], "r")
         for parameter in self.most_ini_data_elements.values():
             new_value = f.readline().split()[0]
             parameter.set_current_value(new_value)
@@ -212,12 +223,13 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
 
         loaded_files = self.loader.get_results()
-        if self.file_names["initial"] != ini_data_default_file_name:
+        if self.file_names["most_initial"] != most_ini_data_default_file_name:
             self.parse_initial_data_file()
         self.max_height = loaded_files[self.file_names["max_height"]]
         self.height = loaded_files[self.file_names["height"]]
 
         self.bar_chart_data = self.max_height[3]
+        self.isoline_plot_data = self.max_height
 
         self.calculated = True
 
@@ -327,7 +339,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         if not self.calculated:
             return
 
-        self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.max_height,
+        self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.isoline_plot_data,
                                                                    levels=self.isoline_levels,
                                                                    use_default_cmap=False)
         self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
@@ -425,17 +437,80 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         return data
 
     def open_static_settings_dialog(self):
-        fault_parameters = [self.static_ini_data_elements[p] for p in
-                            self.static_input_menu_to_elements["fault"]]
-        calculation_parameters = [self.static_ini_data_elements[p] for p in
-                                  self.static_input_menu_to_elements["calculation"]]
-        dialog = StaticSettingsDialog(self.static_ini_data_elements, self.static_input_menu_to_elements, self.run_static)
+        dialog = StaticSettingsDialog(self.static_ini_data_elements, self.static_input_menu_to_elements,
+                                      self.run_static)
         dialog.exec()
 
+    def save_static_parameters(self):
+        ini_data_file = open(self.file_names["static_initial"], "w")
+
+        for parameter in self.static_ini_data_elements.values():
+            input_data = parameter.name + "= " + str(parameter.get_current_value()) + '\n'
+            ini_data_file.write(input_data)
+        ini_data_file.close()
+
+    def show_static_calculation_screen(self):
+        self.calculation_screen = STATICComputationScreen()
+        self.setCentralWidget(self.calculation_screen.get_screen())
+
     def run_static(self):
-        print("static")
-        for p in self.static_ini_data_elements.keys():
-            print(f'{p} = {str(self.static_ini_data_elements[p].get_current_value())}')
+        self.save_static_parameters()
+        self.show_static_calculation_screen()
+
+        commands = static_exe_file_name
+
+        self.process = QProcess()
+        self.process.setWorkingDirectory('STATIC\\')
+        self.process.finished.connect(self.load_static_result)
+        self.process.start(commands)
+
+    def load_static_result(self):
+        print("STATIC staticed")
+
+        n1 = self.static_ini_data_elements["N1"].get_current_value()
+        m1 = self.static_ini_data_elements["M1"].get_current_value()
+        self.static_results = np.zeros((n1, m1), float)
+        f = open(static_results_file_name, "rb")
+        for j in range(0, m1):
+            for i in range(0, n1):
+                self.static_results[i][j] = struct.unpack('d', f.read(8))[0]
+        self.show_static_result()
+
+    def show_static_result(self):
+        self.plot_widget = PlotWidget()
+
+        self.isoline_plot_data = self.static_results
+
+        self.calculated = True
+
+        self.heatmap_plot = HeatmapPlotBuilder(self.static_results)
+        self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.static_results, levels=self.isoline_levels)
+        self.heatmap_3d_plot = Heatmap3DPlotBuilder(self.static_results)
+
+        self.plot_widget.add_plot("heatmap", self.heatmap_plot)
+        self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
+        self.plot_widget.add_plot("heatmap 3d", self.heatmap_3d_plot)
+
+        self.action_heatmap.setEnabled(True)
+        self.action_heatmap_with_contour.setEnabled(True)
+        self.action_3d_heatmap.setEnabled(True)
+        # self.action_wave_profile_bar_chart.setEnabled(True)
+        # self.action_draw_wave_profile.setEnabled(True)
+
+        self.action_heatmap.triggered.connect(
+            lambda: self.plot_widget.set_plot("heatmap")
+        )
+        self.action_3d_heatmap.triggered.connect(
+            lambda: self.plot_widget.set_plot("heatmap 3d")
+        )
+        self.action_heatmap_with_contour.triggered.connect(
+            lambda: self.plot_widget.set_plot("heatmap contour")
+        )
+
+        # self.action_draw_wave_profile.triggered.connect(self.draw_wave_profile)
+
+        self.plot_widget.set_plot("heatmap")
+        self.setCentralWidget(self.plot_widget.get_widget())
 
 
 if __name__ == '__main__':

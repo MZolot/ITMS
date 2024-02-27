@@ -22,6 +22,7 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
 
     def __set_layout(self):
         self.scroll_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.scroll_area.setContentsMargins(0, 0, 0, 0)
 
         fault_parameters = [self.parameters[p] for p in
                             self.parameters_to_menu["fault"]]
@@ -29,9 +30,11 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
                                   self.parameters_to_menu["calculation"]]
 
         fault_box = CollapsibleBox("Fault parameters")
+        fault_box.setContentsMargins(0, 0, 0, 0)
         fault_box.set_content_layout(self.__layout_parameters(fault_parameters))
 
         calculation_box = CollapsibleBox("Calculation parameters")
+        calculation_box.setContentsMargins(0, 0, 0, 0)
         calculation_box.set_content_layout(self.__layout_parameters(calculation_parameters))
 
         line = QtWidgets.QFrame()
@@ -43,10 +46,7 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
         parameters_layout.addWidget(line)
         parameters_layout.addWidget(calculation_box)
         self.parameters_widget.setLayout(parameters_layout)
-        # self.parameters_widget.adjustSize()
-        # self.adjustSize()
 
-        # self.scroll_area.setMinimumHeight(fault_box.height() + calculation_box.height() + 30)
         self.scroll_area.setMinimumHeight(200)
 
     def __layout_parameters(self, parameters):

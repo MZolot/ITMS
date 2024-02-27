@@ -100,9 +100,10 @@ class HeatmapPlotBuilder(PlotBuilder):
 
 
 class HeatmapContourPlotBuilder(HeatmapPlotBuilder):
-    def __init__(self, plot_data, levels, use_default_cmap=True):
+    def __init__(self, plot_data, levels: list | int, use_default_cmap=True):
         super().__init__(plot_data, use_default_cmap)
-        self.levels = levels
+        self.levels = sorted(levels)
+        print(self.levels)
 
         if use_default_cmap:
             self.axes.contourf(plot_data, levels=levels)
