@@ -41,6 +41,7 @@ class IsolineSettingsDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
                 else:
                     self.levels.append(float(value))
 
+        self.levels.sort()
         self.button_box.accepted.connect(self.accept)
         self.ok_callback_function()
         self.close()

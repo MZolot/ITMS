@@ -49,7 +49,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             "static_initial": static_ini_data_default_file_name
         }
 
-        # можно будет добавить кнопку reset для возвращения к начальному значению
         self.most_ini_data_elements: dict[str, DataEntry] = {}
         with open(most_config_file_name, 'r') as j:
             from_json = json.loads(j.read())
@@ -89,7 +88,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
 
         self.wave_profile_end_points = []
-        self.bar_chart_data = None
+        self.wave_profile_data = None
         self.marigram_points = []
         self.isoline_levels = [0.005, 0.01, 0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1]
 
@@ -105,21 +104,18 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.heatmap_plot = None
         self.heatmap_with_contour_plot = None
         self.heatmap_3d_plot = None
-        self.shore_bar_chart_plot = None
+        self.wave_profile_plot = None
 
         self.process: QProcess = QProcess()
         self.calculation_screen = None
 
         self.setupUi(self)
-        self._complete_ui()
+        self.set_actions()
 
-    def _complete_ui(self):
         self.setCentralWidget(self.plot_widget.get_widget())
         self.draw_source()
 
-        # graph = QTGraphHeatmap3DPlotBuilder(self.bottom_map)
-        # self.setCentralWidget(graph.get_widget())
-
+    def set_actions(self):
         self.action_size.triggered.connect(
             lambda: self.open_most_input_menu(self.most_input_menu_to_elements["size"], "Size parameters"))
         self.action_steps.triggered.connect(
@@ -138,7 +134,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             lambda: self.get_marigram_points("bottom"))
         self.action_marigrams.triggered.connect(self._plot_marigrams)
 
-        self.action_load_existing_results.triggered.connect(self.open_file_selection_menu)
+        self.action_load_existing_results.triggered.connect(self.open_most_file_selection_menu)
         self.action_set_contour_lines_levels.triggered.connect(self.open_isoline_settings_menu)
 
         self.action_static.triggered.connect(self.open_static_settings_dialog)
@@ -157,7 +153,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         menu = IsolineSettingsDialog(self.isoline_levels, self.update_isoline_levels)
         menu.exec()
 
-    def open_file_selection_menu(self):
+    def open_most_file_selection_menu(self):
         menu = FileSelectionMenuDialog(self.file_names, self.load_most_result)
         menu.exec()
 
@@ -228,7 +224,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.max_height = loaded_files[self.file_names["max_height"]]
         self.height = loaded_files[self.file_names["height"]]
 
-        self.bar_chart_data = self.max_height[3]
+        self.wave_profile_data = self.max_height[3]
         self.isoline_plot_data = self.max_height
 
         self.calculated = True
@@ -238,17 +234,17 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                                                    levels=self.isoline_levels,
                                                                    use_default_cmap=False)
         self.heatmap_3d_plot = Heatmap3DPlotBuilder(self.max_height)
-        self.shore_bar_chart_plot = BarPlotBuilder(self.bar_chart_data, self.save_bar_chart_data)
+        self.wave_profile_plot = BarPlotBuilder(self.wave_profile_data, self.save_wave_profile_data)
 
         self.plot_widget.add_plot("heatmap", self.heatmap_plot)
         self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
         self.plot_widget.add_plot("heatmap 3d", self.heatmap_3d_plot)
-        self.plot_widget.add_plot("bar", self.shore_bar_chart_plot)
+        self.plot_widget.add_plot("profile", self.wave_profile_plot)
 
         self.action_heatmap.setEnabled(True)
         self.action_heatmap_with_contour.setEnabled(True)
         self.action_3d_heatmap.setEnabled(True)
-        self.action_wave_profile_bar_chart.setEnabled(True)
+        self.action_wave_profile.setEnabled(True)
         self.action_draw_wave_profile.setEnabled(True)
 
         if self.marigram_points:
@@ -263,8 +259,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_heatmap_with_contour.triggered.connect(
             lambda: self.plot_widget.set_plot("heatmap contour")
         )
-        self.action_wave_profile_bar_chart.triggered.connect(
-            lambda: self.plot_widget.set_plot("bar")
+        self.action_wave_profile.triggered.connect(
+            lambda: self.plot_widget.set_plot("profile")
         )
 
         self.action_select_points_on_heatmap.setEnabled(True)
@@ -331,9 +327,9 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         plot.draw_line(self.wave_profile_end_points[0][0], self.wave_profile_end_points[0][1],
                        self.wave_profile_end_points[1][0], self.wave_profile_end_points[1][1])
 
-        self.bar_chart_data = self.get_wave_profile_on_line()
-        self.shore_bar_chart_plot = BarPlotBuilder(self.bar_chart_data, self.save_bar_chart_data)
-        self.plot_widget.add_plot("bar", self.shore_bar_chart_plot)
+        self.wave_profile_data = self.get_wave_profile_on_line()
+        self.wave_profile_plot = BarPlotBuilder(self.wave_profile_data, self.save_wave_profile_data)
+        self.plot_widget.add_plot("profile", self.wave_profile_plot)
 
     def update_isoline_levels(self):
         if not self.calculated:
@@ -352,15 +348,13 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                                              "All Files (*);;Text Files (*.txt)", options=options)
         return file_name
 
-    def save_bar_chart_data(self):
+    def save_wave_profile_data(self):
         file_name = self.open_save_file_dialog()
         if not file_name:
             print("no file name")
             return
-
-        print(file_name)
         file = open(file_name, "w")
-        file.write(np.array2string(self.bar_chart_data, threshold=sys.maxsize))
+        file.write(np.array2string(self.wave_profile_data, threshold=sys.maxsize))
         file.close()
 
     def save_marigrams_data(self):
@@ -377,7 +371,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         file.close()
 
     def get_wave_profile_on_line(self):
-        print(self.wave_profile_end_points)
         x1 = round(self.wave_profile_end_points[0][0])
         y1 = round(self.wave_profile_end_points[0][1])
         x2 = round(self.wave_profile_end_points[1][0])
@@ -432,7 +425,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                 print(curr_x)
                 print(curr_y)
                 print('\n')
-                return self.bar_chart_data
+                return self.wave_profile_data
 
         return data
 
@@ -465,8 +458,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.process.start(commands)
 
     def load_static_result(self):
-        print("STATIC staticed")
-
         n1 = self.static_ini_data_elements["N1"].get_current_value()
         m1 = self.static_ini_data_elements["M1"].get_current_value()
         self.static_results = np.zeros((n1, m1), float)

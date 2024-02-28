@@ -106,9 +106,9 @@ class HeatmapContourPlotBuilder(HeatmapPlotBuilder):
         print(self.levels)
 
         if use_default_cmap:
-            self.axes.contourf(plot_data, levels=levels)
+            self.axes.contourf(plot_data, levels=self.levels)
         else:
-            self.axes.contourf(plot_data, levels=levels, cmap=cmap_imshow)
+            self.axes.contourf(plot_data, levels=self.levels, cmap=cmap_imshow)
 
 
 class Heatmap3DPlotBuilder(PlotBuilder):
