@@ -6,6 +6,7 @@ from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
 from ui_elements.static_settings_dialog import StaticSettingsDialog
 from data_entry import DataEntry
 from file_loader import *
+from subprogram_interface import *
 from plots.stacked_plots_widget import PlotWidget
 from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            HeatmapContourPlotBuilder,
@@ -84,7 +85,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         # self.bottom_map = np.tile(self.bottom_profile, (1500, 1))
 
         self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
-        self.draw_source()
+        # self.draw_source()
         self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
 
         self.wave_profile_end_points = []
@@ -114,6 +115,34 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.setCentralWidget(self.plot_widget.get_widget())
         self.draw_source()
+
+        most_files = {
+            "initial": most_ini_data_default_file_name,
+            "height": height_default_file_name,
+            "max_height": max_height_default_file_name
+        }
+
+        self.MOST_subprogram = MOSTInterface(most_config_file_name,
+                                             most_files,
+                                             most_exe_file_name,
+                                             bottom_profile_file_name,
+                                             self.save_wave_profile_data,
+                                             self.show_most_calculation_screen,
+                                             self.show_loading_screen,
+                                             self.show_most_result)
+
+        static_files = {
+            "initial": static_ini_data_default_file_name,
+            "result": static_results_file_name
+        }
+
+        self.STATIC_subprogram = STATICInterface(static_config_file_name,
+                                                 static_files,
+                                                 static_exe_file_name,
+                                                 self.save_wave_profile_data,
+                                                 self.show_static_calculation_screen,
+                                                 self.show_loading_screen,
+                                                 self.show_static_result)
 
     def set_actions(self):
         self.action_size.triggered.connect(
@@ -158,54 +187,21 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         menu.exec()
 
     def save_most_parameters(self):
-        ini_data_file = open(self.file_names["most_initial"], "w")
-
-        for i in self.most_ini_data_elements.values():
-            input_data = str(i.get_current_value()) + "  --  " + i.label_text + '\n'
-            ini_data_file.write(input_data)
-        ini_data_file.close()
+        self.MOST_subprogram.save_parameters()
 
     def calculate_most(self):
-        # это должно работать, только если программа запущена в первый раз, или если данные изменились
-        self.save_most_parameters()
-        self.show_most_calculation_screen()
-
-        commands = most_exe_file_name
-
-        self.process = QProcess()
-        self.process.setWorkingDirectory('MOST\\')
-        self.process.readyReadStandardOutput.connect(self._update_progress)
-        self.process.finished.connect(self.load_most_result)
-        self.process.start(commands)
-
-    def _update_progress(self):
-        data = self.process.readAllStandardOutput()
-        stdout = bytes(data).decode("utf8").strip()
-        if stdout != '':
-            self.calculation_screen.update_progress_bar(int(stdout))
+        self.MOST_subprogram.start_subprogram()
 
     def show_most_calculation_screen(self):
-        steps = self.most_ini_data_elements["number of time steps"].get_current_value()
-        self.calculation_screen = MOSTComputationScreen(steps)
-        self.setCentralWidget(self.calculation_screen.get_screen())
+        calculation_screen = self.MOST_subprogram.get_calculation_screen()
+        self.setCentralWidget(calculation_screen)
 
-    def _show_loading_screen(self):
-        loading_screen = LoadingScreen()
-        self.setCentralWidget(loading_screen.get_screen())
+    def show_loading_screen(self):
+        loading_screen = self.MOST_subprogram.get_loading_screen()
+        self.setCentralWidget(loading_screen)
 
     def load_most_result(self):
-        self.marigram_points = []
-        self._show_loading_screen()
-
-        self.thread = QThread()
-        self.loader = FileLoader([self.file_names["max_height"], self.file_names["height"]])
-        self.loader.moveToThread(self.thread)
-        self.thread.started.connect(self.loader.run)
-        self.loader.finished.connect(self.thread.quit)
-        self.loader.finished.connect(self.loader.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
-        self.thread.finished.connect(self.show_result)
-        self.thread.start()
+        self.MOST_subprogram.load_results()
 
     def parse_initial_data_file(self):  # TODO: change to work for static
         f = open(self.file_names["most_initial"], "r")
@@ -213,33 +209,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             new_value = f.readline().split()[0]
             parameter.set_current_value(new_value)
 
-    def show_result(self):
-        self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
-        self.draw_source()
-        self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
-
-        loaded_files = self.loader.get_results()
-        if self.file_names["most_initial"] != most_ini_data_default_file_name:
-            self.parse_initial_data_file()
-        self.max_height = loaded_files[self.file_names["max_height"]]
-        self.height = loaded_files[self.file_names["height"]]
-
-        self.wave_profile_data = self.max_height[3]
-        self.isoline_plot_data = self.max_height
-
-        self.calculated = True
-
-        self.heatmap_plot = HeatmapPlotBuilder(self.max_height, default_cmap=False)
-        self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.max_height,
-                                                                   levels=self.isoline_levels,
-                                                                   use_default_cmap=False)
-        self.heatmap_3d_plot = Heatmap3DPlotBuilder(self.max_height)
-        self.wave_profile_plot = BarPlotBuilder(self.wave_profile_data, self.save_wave_profile_data)
-
-        self.plot_widget.add_plot("heatmap", self.heatmap_plot)
-        self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
-        self.plot_widget.add_plot("heatmap 3d", self.heatmap_3d_plot)
-        self.plot_widget.add_plot("profile", self.wave_profile_plot)
+    def show_most_result(self):
+        self.plot_widget = self.MOST_subprogram.plot_widget
 
         self.action_heatmap.setEnabled(True)
         self.action_heatmap_with_contour.setEnabled(True)

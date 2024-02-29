@@ -61,7 +61,7 @@ class SubprogramInterface:
 
     def load_results(self): pass
 
-    def show_results(self): pass
+    def visualise_results(self): pass
 
 
 class MOSTInterface(SubprogramInterface):
@@ -70,19 +70,28 @@ class MOSTInterface(SubprogramInterface):
                  subprogram_file_names,
                  exe_file_name,
                  bottom_profile_file_name,
-                 save_wave_profile_callback):
+                 save_wave_profile_callback,
+                 show_calculation_screen_callback,
+                 show_loading_screen_callback,
+                 show_results_callback):
         super().__init__()
         self.program_file_names = subprogram_file_names
         self.exe_file_name = exe_file_name
         self.save_wave_profile = save_wave_profile_callback
+        self.show_calculation_screen_callback = show_calculation_screen_callback
+        self.show_loading_screen_callback = show_loading_screen_callback
+        self.show_results_callback = show_results_callback
+
+        print(subprogram_file_names)
 
         self.load_initial_data(config_file_name)
 
         self.bottom_profile = np.loadtxt(bottom_profile_file_name)
         self.bottom_map = np.transpose(np.tile(self.bottom_profile, (1500, 1)))
 
+        # Пока не будет понятно, что должно быть на главном экране при запуске
         self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
-        # self.draw_source()
+        self.draw_source()
         self.plot_widget.add_plot("bottom", self.bottom_plot)
 
         self.marigram_points = []
@@ -118,7 +127,8 @@ class MOSTInterface(SubprogramInterface):
     def start_subprogram(self):
         # TODO: это должно работать, только если программа запущена в первый раз, или если данные изменились
         self.save_parameters()
-        self.show_waiting_screen()
+        self.show_calculation_screen_callback()
+        # self.show_waiting_screen()
 
         commands = self.exe_file_name
 
@@ -139,12 +149,20 @@ class MOSTInterface(SubprogramInterface):
         self.calculation_screen = MOSTComputationScreen(steps)
         # self.setCentralWidget(self.calculation_screen.get_screen())
 
+    def get_calculation_screen(self):
+        if not self.calculation_screen:
+            steps = self.ini_data_elements["number of time steps"].get_current_value()
+            self.calculation_screen = MOSTComputationScreen(steps)
+
+        return self.calculation_screen.get_screen()
+
     def parse_parameters(self):
         pass
 
     def load_results(self):
         self.marigram_points = []
-        self.show_loading_screen()
+        # self.show_loading_screen()
+        self.show_loading_screen_callback()
 
         self.thread = QThread()
         self.loader = FileLoader([self.program_file_names["max_height"], self.program_file_names["height"]])
@@ -153,21 +171,22 @@ class MOSTInterface(SubprogramInterface):
         self.loader.finished.connect(self.thread.quit)
         self.loader.finished.connect(self.loader.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
-        self.thread.finished.connect(self.show_results)
+        self.thread.finished.connect(self.visualise_results)
         self.thread.start()
 
-    def show_loading_screen(self):
+    def get_loading_screen(self):
         loading_screen = LoadingScreen()
+        return loading_screen.get_screen()
         # self.setCentralWidget(loading_screen.get_screen())
 
-    def show_results(self):
+    def visualise_results(self):
         self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
         self.draw_source()
         self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
 
         loaded_files = self.loader.get_results()
-        if self.program_file_names["initial"] != self.program_file_names["default_initial"]:
-            self.parse_parameters()
+        # if self.program_file_names["initial"] != self.program_file_names["default_initial"]:
+        #     self.parse_parameters()
         self.max_height = loaded_files[self.program_file_names["max_height"]]
         self.height = loaded_files[self.program_file_names["height"]]
 
@@ -185,8 +204,9 @@ class MOSTInterface(SubprogramInterface):
         self.plot_widget.add_plot("heatmap", self.heatmap_plot)
         self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
         self.plot_widget.add_plot("heatmap 3d", self.heatmap_3d_plot)
-        self.plot_widget.add_plot("bar", self.wave_profile_plot)
+        self.plot_widget.add_plot("profile", self.wave_profile_plot)
 
+        self.show_results_callback()
         # self.action_heatmap.setEnabled(True)
         # self.action_heatmap_with_contour.setEnabled(True)
         # self.action_3d_heatmap.setEnabled(True)
@@ -234,11 +254,17 @@ class STATICInterface(SubprogramInterface):
                  config_file_name,
                  subprogram_file_names,
                  exe_file_name,
-                 save_wave_profile_callback):
+                 save_wave_profile_callback,
+                 show_calculation_screen_callback,
+                 show_loading_screen_callback,
+                 show_results_callback):
         super().__init__()
         self.program_file_names = subprogram_file_names
         self.exe_file_name = exe_file_name
         self.save_wave_profile = save_wave_profile_callback
+        self.show_calculation_screen_callback = show_calculation_screen_callback
+        self.show_loading_screen_callback = show_loading_screen_callback
+        self.show_results_callback = show_results_callback
 
         self.load_initial_data(config_file_name)
 
@@ -264,7 +290,8 @@ class STATICInterface(SubprogramInterface):
 
     def start_subprogram(self):
         self.save_parameters()
-        self.show_waiting_screen()
+        self.show_calculation_screen_callback()
+        # self.show_waiting_screen()
 
         commands = self.exe_file_name
 
@@ -277,9 +304,12 @@ class STATICInterface(SubprogramInterface):
         self.calculation_screen = STATICComputationScreen()
         # self.setCentralWidget(self.calculation_screen.get_screen())
 
-    def parse_parameters(self): pass
+    def parse_parameters(self):
+        pass
 
     def load_results(self):
+        self.show_loading_screen_callback()
+
         n1 = self.ini_data_elements["N1"].get_current_value()
         m1 = self.ini_data_elements["M1"].get_current_value()
         self.result = np.zeros((n1, m1), float)
@@ -287,9 +317,9 @@ class STATICInterface(SubprogramInterface):
         for j in range(0, m1):
             for i in range(0, n1):
                 self.result[i][j] = struct.unpack('d', f.read(8))[0]
-        self.show_results()
+        self.visualise_results()
 
-    def show_results(self):
+    def visualise_results(self):
         self.plot_widget = PlotWidget()
 
         self.calculated = True
@@ -301,3 +331,5 @@ class STATICInterface(SubprogramInterface):
         self.plot_widget.add_plot("heatmap", self.heatmap_plot)
         self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
         self.plot_widget.add_plot("heatmap 3d", self.heatmap_3d_plot)
+
+        self.show_results_callback()
