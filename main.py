@@ -1,12 +1,13 @@
 import ui_elements.qt_designer_ui.main_ui as main_ui
-from ui_elements.load_data_file_selection_dialog import *
-from ui_elements.input_dialog import InputMenuDialog, SourceMenuDialog
-from ui_elements.waiting_screens import *
-from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
-from ui_elements.static_settings_dialog import StaticSettingsDialog
-from data_entry import DataEntry
-from file_loader import *
-from subprogram_interface import *
+# from ui_elements.load_data_file_selection_dialog import *
+# from ui_elements.input_dialog import InputMenuDialog, SourceMenuDialog
+# from ui_elements.waiting_screens import *
+# from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
+# from ui_elements.static_settings_dialog import StaticSettingsDialog
+# from data_entry import DataEntry
+# from file_loader import *
+from subprograms.most_interface import *
+from subprograms.static_interface import *
 from plots.stacked_plots_widget import PlotWidget
 from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            HeatmapContourPlotBuilder,
@@ -16,7 +17,7 @@ from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
 # from plots.pyqtgraph_plot_builder import QTGraphHeatmap3DPlotBuilder
 
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QProcess, QThread
+from PyQt5.QtCore import QProcess
 
 import numpy as np
 
@@ -50,13 +51,41 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             "static_initial": static_ini_data_default_file_name
         }
 
-        self.most_ini_data_elements: dict[str, DataEntry] = {}
-        with open(most_config_file_name, 'r') as j:
-            from_json = json.loads(j.read())
-            for element in from_json:
-                self.most_ini_data_elements[element["name"]] = DataEntry(element["name"], element["label_text"],
-                                                                         element["default_value"], element["unit"],
-                                                                         element["is_float"])
+        most_files = {
+            "initial": most_ini_data_default_file_name,
+            "height": height_default_file_name,
+            "max_height": max_height_default_file_name
+        }
+
+        self.MOST_subprogram = MOSTInterface(most_config_file_name,
+                                             most_files,
+                                             most_exe_file_name,
+                                             bottom_profile_file_name,
+                                             self.save_wave_profile_data,
+                                             self.show_most_calculation_screen,
+                                             self.show_loading_screen,
+                                             self.show_most_result)
+
+        static_files = {
+            "initial": static_ini_data_default_file_name,
+            "result": static_results_file_name
+        }
+
+        self.STATIC_subprogram = STATICInterface(static_config_file_name,
+                                                 static_files,
+                                                 static_exe_file_name,
+                                                 self.save_wave_profile_data,
+                                                 self.show_static_calculation_screen,
+                                                 self.show_loading_screen,
+                                                 self.show_static_result)
+
+        # self.most_ini_data_elements: dict[str, DataEntry] = {}
+        # with open(most_config_file_name, 'r') as j:
+        #     from_json = json.loads(j.read())
+        #     for element in from_json:
+        #         self.most_ini_data_elements[element["name"]] = DataEntry(element["name"], element["label_text"],
+        #                                                                  element["default_value"], element["unit"],
+        #                                                                  element["is_float"])
 
         self.most_input_menu_to_elements = {
             "area": ["x-size", "y-size", "x-step", "y-step", "lowest depth"],
@@ -116,34 +145,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.setCentralWidget(self.plot_widget.get_widget())
         self.draw_source()
 
-        most_files = {
-            "initial": most_ini_data_default_file_name,
-            "height": height_default_file_name,
-            "max_height": max_height_default_file_name
-        }
-
-        self.MOST_subprogram = MOSTInterface(most_config_file_name,
-                                             most_files,
-                                             most_exe_file_name,
-                                             bottom_profile_file_name,
-                                             self.save_wave_profile_data,
-                                             self.show_most_calculation_screen,
-                                             self.show_loading_screen,
-                                             self.show_most_result)
-
-        static_files = {
-            "initial": static_ini_data_default_file_name,
-            "result": static_results_file_name
-        }
-
-        self.STATIC_subprogram = STATICInterface(static_config_file_name,
-                                                 static_files,
-                                                 static_exe_file_name,
-                                                 self.save_wave_profile_data,
-                                                 self.show_static_calculation_screen,
-                                                 self.show_loading_screen,
-                                                 self.show_static_result)
-
     def set_actions(self):
         self.action_size.triggered.connect(
             lambda: self.open_most_input_menu(self.most_input_menu_to_elements["size"], "Size parameters"))
@@ -171,7 +172,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     def open_most_input_menu(self, element_names, title, source=False):
         elements = []
         for n in element_names:
-            elements.append(self.most_ini_data_elements[n])
+            elements.append(self.MOST_subprogram.ini_data_elements[n])
+            # elements.append(self.most_ini_data_elements[n])
         if source:
             menu = SourceMenuDialog(elements, title, self)
         else:
@@ -183,7 +185,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         menu.exec()
 
     def open_most_file_selection_menu(self):
-        menu = FileSelectionMenuDialog(self.file_names, self.load_most_result)
+        menu = FileSelectionMenuDialog(self.MOST_subprogram.program_file_names, self.MOST_subprogram.load_results)
         menu.exec()
 
     def save_most_parameters(self):
@@ -205,7 +207,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def parse_initial_data_file(self):  # TODO: change to work for static
         f = open(self.file_names["most_initial"], "r")
-        for parameter in self.most_ini_data_elements.values():
+        for parameter in self.MOST_subprogram.ini_data_elements.values():
             new_value = f.readline().split()[0]
             parameter.set_current_value(new_value)
 
@@ -254,16 +256,17 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def _plot_marigrams(self):
         x = []
-        time_step = self.most_ini_data_elements["time step"].get_current_value()
-        steps_total = self.most_ini_data_elements["number of time steps"].get_current_value()
-        steps_between = self.most_ini_data_elements["number of steps between surface output"].get_current_value()
+        time_step = self.MOST_subprogram.ini_data_elements["time step"].get_current_value()
+        steps_total = self.MOST_subprogram.ini_data_elements["number of time steps"].get_current_value()
+        steps_between = self.MOST_subprogram.ini_data_elements[
+            "number of steps between surface output"].get_current_value()
         for i in range(0, steps_total, steps_between):
             x.append(i * time_step)
 
         self.marigrams_plot_data = []
         n_marigrams = len(self.marigram_points)
         length = len(self.height)
-        y_size = self.most_ini_data_elements["y-size"].get_current_value()
+        y_size = self.MOST_subprogram.ini_data_elements["y-size"].get_current_value()
 
         for i in range(n_marigrams):
             point = self.marigram_points[i]
@@ -279,14 +282,14 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.plot_widget.set_plot("marigrams")
 
     def draw_source(self):
-        x = self.most_ini_data_elements["ellipse center x location"].get_current_value()
-        y = self.most_ini_data_elements["ellipse center y location"].get_current_value()
-        x_step = self.most_ini_data_elements["x-step"].get_current_value()
-        y_step = self.most_ini_data_elements["y-step"].get_current_value()
+        x = self.MOST_subprogram.ini_data_elements["ellipse center x location"].get_current_value()
+        y = self.MOST_subprogram.ini_data_elements["ellipse center y location"].get_current_value()
+        x_step = self.MOST_subprogram.ini_data_elements["x-step"].get_current_value()
+        y_step = self.MOST_subprogram.ini_data_elements["y-step"].get_current_value()
         self.bottom_plot.draw_source(
             (x, y),
-            (self.most_ini_data_elements["ellipse half x length"].get_current_value() * 2) / x_step,
-            (self.most_ini_data_elements["ellipse half y length"].get_current_value() * 2) / y_step
+            (self.MOST_subprogram.ini_data_elements["ellipse half x length"].get_current_value() * 2) / x_step,
+            (self.MOST_subprogram.ini_data_elements["ellipse half y length"].get_current_value() * 2) / y_step
         )
 
     def draw_wave_profile(self):

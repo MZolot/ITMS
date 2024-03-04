@@ -5,7 +5,7 @@ from PyQt5 import QtWidgets
 class FileSelectionMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
     def __init__(self, file_name_dictionary, ok_callback_function):
         self.dictionary = file_name_dictionary
-        self.ini_data_file_name = file_name_dictionary["most_initial"]
+        self.ini_data_file_name = file_name_dictionary["initial"]
         self.height_file_name = file_name_dictionary["height"]
         self.max_height_file_name = file_name_dictionary["max_height"]
 
