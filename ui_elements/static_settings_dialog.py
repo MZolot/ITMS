@@ -29,25 +29,27 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
         calculation_parameters = [self.parameters[p] for p in
                                   self.parameters_to_menu["calculation"]]
 
-        fault_box = CollapsibleBox("Fault parameters")
-        fault_box.setContentsMargins(0, 0, 0, 0)
-        fault_box.set_content_layout(self.__layout_parameters(fault_parameters))
+        fault_label = QtWidgets.QLabel("Fault parameters")
+        fault_container = QtWidgets.QWidget()
+        fault_container.setContentsMargins(0, 0, 0, 0)
+        fault_container.setLayout(self.__layout_parameters(fault_parameters))
 
-        calculation_box = CollapsibleBox("Calculation parameters")
-        calculation_box.setContentsMargins(0, 0, 0, 0)
-        calculation_box.set_content_layout(self.__layout_parameters(calculation_parameters))
+        calculation_container = CollapsibleBox("Calculation parameters")
+        calculation_container.setContentsMargins(0, 0, 0, 0)
+        calculation_container.set_content_layout(self.__layout_parameters(calculation_parameters))
 
         line = QtWidgets.QFrame()
         line.setFrameShape(QtWidgets.QFrame.HLine)
         line.setFrameShadow(QtWidgets.QFrame.Sunken)
 
         parameters_layout = QtWidgets.QVBoxLayout()
-        parameters_layout.addWidget(fault_box)
+        parameters_layout.addWidget(fault_label)
+        parameters_layout.addWidget(fault_container)
         parameters_layout.addWidget(line)
-        parameters_layout.addWidget(calculation_box)
+        parameters_layout.addWidget(calculation_container)
         self.parameters_widget.setLayout(parameters_layout)
 
-        self.scroll_area.setMinimumHeight(200)
+        self.scroll_area.setMinimumHeight(int(fault_container.height() / 1.4))
 
     def __layout_parameters(self, parameters):
         layout = QtWidgets.QVBoxLayout()
@@ -97,7 +99,11 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
         self.close()
 
     def default_button_pushed(self):
-        self.adjustSize()
+        for parameter in self.parameters.values():
+            parameter.set_current_value(parameter.default_value)
+
+            line_edit = self.line_edits[parameter.name]
+            line_edit.setPlaceholderText(str(parameter.get_current_value()))
 
 
 class ErrorDialog(QtWidgets.QDialog, error_ui.Ui_Dialog):
