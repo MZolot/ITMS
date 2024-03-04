@@ -5,8 +5,9 @@ from PyQt5 import QtWidgets
 
 
 class InputMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
-    def __init__(self, data_elements: list[DataEntry], title):
+    def __init__(self, data_elements: list[DataEntry], title, ok_pushed_callback=None):
         self.data_elements = data_elements
+        self.ok_pushed = ok_pushed_callback
 
         super().__init__()
         self.setupUi(self)
@@ -59,17 +60,8 @@ class InputMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
                 new_value_float = float(self.line_edits[i].text())
                 self.data_elements[i].set_current_value(new_value_float)
 
+        self.ok_pushed()
         self.close()
-
-
-class SourceMenuDialog(InputMenuDialog):
-    def __init__(self, data_elements, title, app):
-        super().__init__(data_elements, title)
-        self.app = app
-
-    def ok_button_pushed(self):
-        super().ok_button_pushed()
-        self.app.draw_source()
 
 
 class ErrorDialog(QtWidgets.QDialog, error_ui.Ui_Dialog):

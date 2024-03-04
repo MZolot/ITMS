@@ -1,9 +1,9 @@
 import ui_elements.qt_designer_ui.main_ui as main_ui
 # from ui_elements.load_data_file_selection_dialog import *
-# from ui_elements.input_dialog import InputMenuDialog, SourceMenuDialog
+from ui_elements.input_dialog import InputMenuDialog
 # from ui_elements.waiting_screens import *
-# from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
-# from ui_elements.static_settings_dialog import StaticSettingsDialog
+from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
+from ui_elements.static_settings_dialog import StaticSettingsDialog
 # from data_entry import DataEntry
 # from file_loader import *
 from subprograms.most_interface import *
@@ -57,14 +57,15 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             "max_height": max_height_default_file_name
         }
 
-        self.MOST_subprogram = MOSTInterface(most_config_file_name,
-                                             most_files,
-                                             most_exe_file_name,
-                                             bottom_profile_file_name,
-                                             self.save_wave_profile_data,
-                                             self.show_most_calculation_screen,
-                                             self.show_loading_screen,
-                                             self.show_most_result)
+        self.MOST_subprogram = MOSTInterface(config_file_name=most_config_file_name,
+                                             subprogram_file_names=most_files,
+                                             exe_file_name=most_exe_file_name,
+                                             bottom_profile_file_name=bottom_profile_file_name,
+                                             save_wave_profile_callback=self.save_wave_profile_data,
+                                             save_marigrams_callback=self.save_marigrams_data,
+                                             show_calculation_screen_callback=self.show_most_calculation_screen,
+                                             show_loading_screen_callback=self.show_loading_screen,
+                                             show_results_callback=self.show_most_result)
 
         static_files = {
             "initial": static_ini_data_default_file_name,
@@ -113,9 +114,10 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.bottom_map = np.transpose(np.tile(self.bottom_profile, (1500, 1)))
         # self.bottom_map = np.tile(self.bottom_profile, (1500, 1))
 
-        self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
+        # self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
         # self.draw_source()
-        self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
+        # self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
+        self.plot_widget = PlotWidget({"bottom": self.MOST_subprogram.bottom_plot})
 
         self.wave_profile_end_points = []
         self.wave_profile_data = None
@@ -143,7 +145,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.set_actions()
 
         self.setCentralWidget(self.plot_widget.get_widget())
-        self.draw_source()
+        # self.draw_source()
 
     def set_actions(self):
         self.action_size.triggered.connect(
@@ -155,14 +157,14 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_calculation_parameters.triggered.connect(
             lambda: self.open_most_input_menu(self.most_input_menu_to_elements["calculation"],
                                               "Calculation parameters"))
-        self.action_calculate.triggered.connect(self.calculate_most)
+        self.action_calculate.triggered.connect(self.MOST_subprogram.start_subprogram)
 
         self.action_show_area.triggered.connect(
             lambda: self.plot_widget.set_plot("bottom"))
 
         self.action_select_points_on_area.triggered.connect(
             lambda: self.get_marigram_points("bottom"))
-        self.action_marigrams.triggered.connect(self._plot_marigrams)
+        self.action_marigrams.triggered.connect(self.plot_marigrams)
 
         self.action_load_existing_results.triggered.connect(self.open_most_file_selection_menu)
         self.action_set_contour_lines_levels.triggered.connect(self.open_isoline_settings_menu)
@@ -175,7 +177,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             elements.append(self.MOST_subprogram.ini_data_elements[n])
             # elements.append(self.most_ini_data_elements[n])
         if source:
-            menu = SourceMenuDialog(elements, title, self)
+            menu = InputMenuDialog(elements, title, self.MOST_subprogram.draw_source)
         else:
             menu = InputMenuDialog(elements, title)
         menu.exec()
@@ -188,11 +190,11 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         menu = FileSelectionMenuDialog(self.MOST_subprogram.program_file_names, self.MOST_subprogram.load_results)
         menu.exec()
 
-    def save_most_parameters(self):
-        self.MOST_subprogram.save_parameters()
+    # def save_most_parameters(self):
+    #     self.MOST_subprogram.save_parameters()
 
-    def calculate_most(self):
-        self.MOST_subprogram.start_subprogram()
+    # def calculate_most(self):
+    #     self.MOST_subprogram.start_subprogram()
 
     def show_most_calculation_screen(self):
         calculation_screen = self.MOST_subprogram.get_calculation_screen()
@@ -202,8 +204,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         loading_screen = self.MOST_subprogram.get_loading_screen()
         self.setCentralWidget(loading_screen)
 
-    def load_most_result(self):
-        self.MOST_subprogram.load_results()
+    # def load_most_result(self):
+    #     self.MOST_subprogram.load_results()
 
     def parse_initial_data_file(self):  # TODO: change to work for static
         f = open(self.file_names["most_initial"], "r")
@@ -220,7 +222,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_wave_profile.setEnabled(True)
         self.action_draw_wave_profile.setEnabled(True)
 
-        if self.marigram_points:
+        if (self.MOST_subprogram.marigram_points is not None) & (self.MOST_subprogram.marigram_points != []):
             self.action_marigrams.setEnabled(True)
 
         self.action_heatmap.triggered.connect(
@@ -251,37 +253,16 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.marigram_points = plot.get_input_points()
         plot.draw_points(self.marigram_points)
 
-        if self.calculated:
+        self.MOST_subprogram.marigram_points = self.marigram_points
+
+        if self.MOST_subprogram.calculated & (self.MOST_subprogram.marigram_points != []):
             self.action_marigrams.setEnabled(True)
 
-    def _plot_marigrams(self):
-        x = []
-        time_step = self.MOST_subprogram.ini_data_elements["time step"].get_current_value()
-        steps_total = self.MOST_subprogram.ini_data_elements["number of time steps"].get_current_value()
-        steps_between = self.MOST_subprogram.ini_data_elements[
-            "number of steps between surface output"].get_current_value()
-        for i in range(0, steps_total, steps_between):
-            x.append(i * time_step)
-
-        self.marigrams_plot_data = []
-        n_marigrams = len(self.marigram_points)
-        length = len(self.height)
-        y_size = self.MOST_subprogram.ini_data_elements["y-size"].get_current_value()
-
-        for i in range(n_marigrams):
-            point = self.marigram_points[i]
-            start_y = int(point[1])
-            if start_y == y_size:
-                start_y = y_size - 1
-            selected = self.height[[y for y in range(start_y, length, y_size)], int(point[0])]
-            self.marigrams_plot_data.append(selected.tolist())
-
-        self.marigrams_plot = MarigramsPlotBuilder(x, self.marigrams_plot_data, self.marigram_points,
-                                                   self.save_marigrams_data)
-        self.plot_widget.add_plot("marigrams", self.marigrams_plot)
+    def plot_marigrams(self):
+        self.MOST_subprogram.plot_marigrams()
         self.plot_widget.set_plot("marigrams")
 
-    def draw_source(self):
+    def draw_source(self):  # TODO
         x = self.MOST_subprogram.ini_data_elements["ellipse center x location"].get_current_value()
         y = self.MOST_subprogram.ini_data_elements["ellipse center y location"].get_current_value()
         x_step = self.MOST_subprogram.ini_data_elements["x-step"].get_current_value()

@@ -1,11 +1,7 @@
 from subprograms.subprogram_interface import SubprogramInterface
 
 from ui_elements.load_data_file_selection_dialog import *
-from ui_elements.input_dialog import InputMenuDialog, SourceMenuDialog
 from ui_elements.waiting_screens import *
-from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
-from ui_elements.static_settings_dialog import StaticSettingsDialog
-from data_entry import DataEntry
 from file_loader import *
 from plots.stacked_plots_widget import PlotWidget
 from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
@@ -13,14 +9,9 @@ from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            Heatmap3DPlotBuilder,
                                            BarPlotBuilder,
                                            MarigramsPlotBuilder)
-
-from PyQt5 import QtWidgets
 from PyQt5.QtCore import QProcess, QThread
 
 import numpy as np
-
-import json
-import struct
 
 
 class MOSTInterface(SubprogramInterface):
@@ -30,6 +21,7 @@ class MOSTInterface(SubprogramInterface):
                  exe_file_name,
                  bottom_profile_file_name,
                  save_wave_profile_callback,
+                 save_marigrams_callback,
                  show_calculation_screen_callback,
                  show_loading_screen_callback,
                  show_results_callback):
@@ -37,6 +29,7 @@ class MOSTInterface(SubprogramInterface):
         self.program_file_names = subprogram_file_names
         self.exe_file_name = exe_file_name
         self.save_wave_profile = save_wave_profile_callback
+        self.save_marigrams = save_marigrams_callback
         self.show_calculation_screen_callback = show_calculation_screen_callback
         self.show_loading_screen_callback = show_loading_screen_callback
         self.show_results_callback = show_results_callback
@@ -54,6 +47,9 @@ class MOSTInterface(SubprogramInterface):
         self.plot_widget.add_plot("bottom", self.bottom_plot)
 
         self.marigram_points = []
+        self.marigrams_plot_data = []
+        self.marigrams_plot = None
+
         self.isoline_levels = [0.005, 0.01, 0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1]
 
         self.height = None
@@ -119,7 +115,7 @@ class MOSTInterface(SubprogramInterface):
         pass
 
     def load_results(self):
-        self.marigram_points = []
+        # self.marigram_points = []
         # self.show_loading_screen()
         self.show_loading_screen_callback()
 
@@ -166,35 +162,6 @@ class MOSTInterface(SubprogramInterface):
         self.plot_widget.add_plot("profile", self.wave_profile_plot)
 
         self.show_results_callback()
-        # self.action_heatmap.setEnabled(True)
-        # self.action_heatmap_with_contour.setEnabled(True)
-        # self.action_3d_heatmap.setEnabled(True)
-        # self.action_wave_profile_bar_chart.setEnabled(True)
-        # self.action_draw_wave_profile.setEnabled(True)
-
-        # if self.marigram_points:
-        #     self.action_marigrams.setEnabled(True)
-
-        # self.action_heatmap.triggered.connect(
-        #     lambda: self.plot_widget.set_plot("heatmap")
-        # )
-        # self.action_3d_heatmap.triggered.connect(
-        #     lambda: self.plot_widget.set_plot("heatmap 3d")
-        # )
-        # self.action_heatmap_with_contour.triggered.connect(
-        #     lambda: self.plot_widget.set_plot("heatmap contour")
-        # )
-        # self.action_wave_profile_bar_chart.triggered.connect(
-        #     lambda: self.plot_widget.set_plot("bar")
-        # )
-
-        # self.action_select_points_on_heatmap.setEnabled(True)
-        # self.action_select_points_on_heatmap.triggered.connect(
-        #     lambda: self.get_marigram_points("heatmap"))
-        # self.action_draw_wave_profile.triggered.connect(self.draw_wave_profile)
-
-        # self.plot_widget.set_plot("heatmap")
-        # self.setCentralWidget(self.plot_widget.get_widget())
 
     def draw_source(self):
         x = self.ini_data_elements["ellipse center x location"].get_current_value()
@@ -206,3 +173,32 @@ class MOSTInterface(SubprogramInterface):
             (self.ini_data_elements["ellipse half x length"].get_current_value() * 2) / x_step,
             (self.ini_data_elements["ellipse half y length"].get_current_value() * 2) / y_step
         )
+
+    def plot_marigrams(self):
+        x = []
+        time_step = self.ini_data_elements["time step"].get_current_value()
+        steps_total = self.ini_data_elements["number of time steps"].get_current_value()
+        steps_between = self.ini_data_elements[
+            "number of steps between surface output"].get_current_value()
+        for i in range(0, steps_total, steps_between):
+            x.append(i * time_step)
+
+        print("marigram points:")
+        print(self.marigram_points)
+        self.marigrams_plot_data = []
+        n_marigrams = len(self.marigram_points)
+        length = len(self.height)
+        y_size = self.ini_data_elements["y-size"].get_current_value()
+
+        for i in range(n_marigrams):
+            point = self.marigram_points[i]
+            start_y = int(point[1])
+            if start_y == y_size:
+                start_y = y_size - 1
+            selected = self.height[[y for y in range(start_y, length, y_size)], int(point[0])]
+            self.marigrams_plot_data.append(selected.tolist())
+
+        self.marigrams_plot = MarigramsPlotBuilder(x, self.marigrams_plot_data, self.marigram_points,
+                                                   self.save_marigrams)
+        self.plot_widget.add_plot("marigrams", self.marigrams_plot)
+        self.plot_widget.set_plot("marigrams")

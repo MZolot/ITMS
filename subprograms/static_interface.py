@@ -1,25 +1,18 @@
 from subprograms.subprogram_interface import SubprogramInterface
 
-from ui_elements.load_data_file_selection_dialog import *
-from ui_elements.input_dialog import InputMenuDialog, SourceMenuDialog
 from ui_elements.waiting_screens import *
-from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
-from ui_elements.static_settings_dialog import StaticSettingsDialog
 from data_entry import DataEntry
 from file_loader import *
 from plots.stacked_plots_widget import PlotWidget
 from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            HeatmapContourPlotBuilder,
                                            Heatmap3DPlotBuilder,
-                                           BarPlotBuilder,
-                                           MarigramsPlotBuilder)
+                                           BarPlotBuilder)
 
-from PyQt5 import QtWidgets
 from PyQt5.QtCore import QProcess, QThread
 
 import numpy as np
 
-import json
 import struct
 
 
