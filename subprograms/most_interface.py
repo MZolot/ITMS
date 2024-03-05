@@ -83,7 +83,6 @@ class MOSTInterface(SubprogramInterface):
         # TODO: это должно работать, только если программа запущена в первый раз, или если данные изменились
         self.save_parameters()
         self.show_calculation_screen_callback()
-        # self.show_waiting_screen()
 
         commands = self.exe_file_name
 
@@ -113,8 +112,9 @@ class MOSTInterface(SubprogramInterface):
 
     def load_results(self):
         # self.marigram_points = []
-        # self.show_loading_screen()
         self.show_loading_screen_callback()
+
+        self.parse_parameters()
 
         self.thread = QThread()
         self.loader = FileLoader([self.program_file_names["max_height"], self.program_file_names["height"]])
@@ -129,7 +129,6 @@ class MOSTInterface(SubprogramInterface):
     def get_loading_screen(self):
         loading_screen = LoadingScreen()
         return loading_screen.get_screen()
-        # self.setCentralWidget(loading_screen.get_screen())
 
     def visualise_results(self):
         self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
@@ -142,6 +141,7 @@ class MOSTInterface(SubprogramInterface):
         self.max_height = loaded_files[self.program_file_names["max_height"]]
         self.height = loaded_files[self.program_file_names["height"]]
 
+        self.isoline_plot_data = self.max_height
         self.bar_chart_data = self.max_height[3]
 
         self.calculated = True

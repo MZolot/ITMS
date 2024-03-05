@@ -1,15 +1,12 @@
 from subprograms.subprogram_interface import SubprogramInterface
 
 from ui_elements.waiting_screens import *
-from data_entry import DataEntry
-from file_loader import *
 from plots.stacked_plots_widget import PlotWidget
 from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            HeatmapContourPlotBuilder,
-                                           Heatmap3DPlotBuilder,
-                                           BarPlotBuilder)
+                                           Heatmap3DPlotBuilder)
 
-from PyQt5.QtCore import QProcess, QThread
+from PyQt5.QtCore import QProcess
 
 import numpy as np
 
@@ -91,7 +88,9 @@ class STATICInterface(SubprogramInterface):
 
         self.calculated = True
 
-        self.heatmap_plot = HeatmapPlotBuilder(self.result, default_cmap=False)
+        self.isoline_plot_data = self.result
+
+        self.heatmap_plot = HeatmapPlotBuilder(self.result, default_cmap=True)
         self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.result,
                                                                    levels=self.isoline_levels,
                                                                    use_default_cmap=False)
@@ -100,5 +99,7 @@ class STATICInterface(SubprogramInterface):
         self.plot_widget.add_plot("heatmap", self.heatmap_plot)
         self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
         self.plot_widget.add_plot("heatmap 3d", self.heatmap_3d_plot)
+
+        self.plot_widget.set_plot("heatmap")
 
         self.show_results_callback()

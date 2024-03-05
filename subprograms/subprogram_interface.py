@@ -15,6 +15,8 @@ class SubprogramInterface:
 
         self.wave_profile_end_points = []
         self.bar_chart_data = None
+        self.isoline_levels = []
+        self.isoline_plot_data = None
         self.thread = None
         self.loader = None
         self.calculation_screen = None

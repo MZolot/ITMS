@@ -74,6 +74,13 @@
     <property name="title">
      <string>Visualisation</string>
     </property>
+    <widget class="QMenu" name="menu_set_contour_lines_levels">
+     <property name="title">
+      <string>Set contour lines levels...</string>
+     </property>
+     <addaction name="action_set_contour_lines_levels_for_MOST"/>
+     <addaction name="action_set_contour_lines_levels_for_STATIC"/>
+    </widget>
     <addaction name="action_heatmap"/>
     <addaction name="action_heatmap_with_contour"/>
     <addaction name="action_3d_heatmap"/>
@@ -81,7 +88,7 @@
     <addaction name="separator"/>
     <addaction name="action_marigrams"/>
     <addaction name="separator"/>
-    <addaction name="action_set_contour_lines_levels"/>
+    <addaction name="menu_set_contour_lines_levels"/>
     <addaction name="action_draw_wave_profile"/>
    </widget>
    <addaction name="menu_area"/>
@@ -179,7 +186,7 @@
   </action>
   <action name="action_load_existing_results">
    <property name="text">
-    <string>Load existing results...</string>
+    <string>Load existing MOST results...</string>
    </property>
   </action>
   <action name="action_select_points_on_area">
@@ -193,11 +200,6 @@
    </property>
    <property name="text">
     <string>On heatmap</string>
-   </property>
-  </action>
-  <action name="action_set_contour_lines_levels">
-   <property name="text">
-    <string>Set contour lines levels...</string>
    </property>
   </action>
   <action name="action_default">
@@ -216,6 +218,16 @@
   <action name="action_static">
    <property name="text">
     <string>STATIC</string>
+   </property>
+  </action>
+  <action name="action_set_contour_lines_levels_for_MOST">
+   <property name="text">
+    <string>For MOST</string>
+   </property>
+  </action>
+  <action name="action_set_contour_lines_levels_for_STATIC">
+   <property name="text">
+    <string>For STATIC</string>
    </property>
   </action>
  </widget>
