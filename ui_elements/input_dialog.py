@@ -5,9 +5,8 @@ from PyQt5 import QtWidgets
 
 
 class InputMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
-    def __init__(self, data_elements: list[DataEntry], title, ok_pushed_callback=None):
+    def __init__(self, data_elements: list[DataEntry], title):
         self.data_elements = data_elements
-        self.ok_pushed = ok_pushed_callback
 
         super().__init__()
         self.setupUi(self)
@@ -15,7 +14,7 @@ class InputMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
         self.line_edits = []
         self.title = title
         self.set_layout(self.data_elements)
-        self.pushButton_ok.clicked.connect(self.ok_button_pushed)
+        self.push_button_ok.clicked.connect(self.ok_button_pushed)
 
     def set_layout(self, data_elements):
         for i in range(len(data_elements)):
@@ -34,11 +33,11 @@ class InputMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
             unit_label = QtWidgets.QLabel(p.unit)
             unit_label.setMaximumWidth(30)
 
-            self.gridLayout.addWidget(name_label, i, 0)
-            self.gridLayout.addWidget(line_edit, i, 1)
-            self.gridLayout.addWidget(unit_label, i, 2)
+            self.parameters_grid_layout.addWidget(name_label, i, 0)
+            self.parameters_grid_layout.addWidget(line_edit, i, 1)
+            self.parameters_grid_layout.addWidget(unit_label, i, 2)
 
-            self.gridLayout.setHorizontalSpacing(15)
+            self.parameters_grid_layout.setHorizontalSpacing(15)
 
             self.setWindowTitle(self.title)
 
@@ -60,8 +59,32 @@ class InputMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
                 new_value_float = float(self.line_edits[i].text())
                 self.data_elements[i].set_current_value(new_value_float)
 
-        self.ok_pushed()
         self.close()
+
+
+class SourceMenuDialog(InputMenuDialog):
+    def __init__(self, data_elements, title, ok_pushed_callback):
+        super().__init__(data_elements, title)
+        self.ok_pushed = ok_pushed_callback
+
+    def ok_button_pushed(self):
+        super().ok_button_pushed()
+        self.ok_pushed()
+
+
+class CalculationMenuDialog(InputMenuDialog):
+    def __init__(self, data_elements, title, calculate_pushed_callback):
+        super().__init__(data_elements, title)
+        self.calculate_pushed = calculate_pushed_callback
+
+        push_button_calculate = QtWidgets.QPushButton()
+        push_button_calculate.setText("Calculate")
+        self.buttons_horizontal_layout.insertWidget(0, push_button_calculate)
+        push_button_calculate.clicked.connect(self.calculate_button_pushed)
+
+    def calculate_button_pushed(self):
+        self.ok_button_pushed()
+        self.calculate_pushed()
 
 
 class ErrorDialog(QtWidgets.QDialog, error_ui.Ui_Dialog):

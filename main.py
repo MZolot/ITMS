@@ -1,6 +1,6 @@
 import ui_elements.qt_designer_ui.main_ui as main_ui
 # from ui_elements.load_data_file_selection_dialog import *
-from ui_elements.input_dialog import InputMenuDialog
+from ui_elements.input_dialog import *
 # from ui_elements.waiting_screens import *
 from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
 from ui_elements.static_settings_dialog import StaticSettingsDialog
@@ -12,9 +12,7 @@ from plots.stacked_plots_widget import PlotWidget
 from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            HeatmapContourPlotBuilder,
                                            Heatmap3DPlotBuilder,
-                                           BarPlotBuilder,
-                                           MarigramsPlotBuilder)
-# from plots.pyqtgraph_plot_builder import QTGraphHeatmap3DPlotBuilder
+                                           BarPlotBuilder)
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QProcess
@@ -121,7 +119,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.wave_profile_end_points = []
         self.wave_profile_data = None
-        self.marigram_points = []
         self.isoline_levels = [0.005, 0.01, 0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1]
 
         self.calculated = False
@@ -153,10 +150,11 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_steps.triggered.connect(
             lambda: self.open_most_input_menu(self.most_input_menu_to_elements["steps"], "Steps parameters"))
         self.action_source_parameters.triggered.connect(
-            lambda: self.open_most_input_menu(self.most_input_menu_to_elements["source"], "Source parameters", True))
+            lambda: self.open_most_input_menu(self.most_input_menu_to_elements["source"], "Source parameters",
+                                              "source"))
         self.action_calculation_parameters.triggered.connect(
             lambda: self.open_most_input_menu(self.most_input_menu_to_elements["calculation"],
-                                              "Calculation parameters"))
+                                              "Calculation parameters", "calculation"))
         self.action_calculate.triggered.connect(self.MOST_subprogram.start_subprogram)
 
         self.action_show_area.triggered.connect(
@@ -171,15 +169,18 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.action_static.triggered.connect(self.open_static_settings_dialog)
 
-    def open_most_input_menu(self, element_names, title, source=False):
+    def open_most_input_menu(self, element_names, title, menu_type=""):
         elements = []
         for n in element_names:
             elements.append(self.MOST_subprogram.ini_data_elements[n])
             # elements.append(self.most_ini_data_elements[n])
-        if source:
-            menu = InputMenuDialog(elements, title, self.MOST_subprogram.draw_source)
+        if menu_type == "source":
+            menu = SourceMenuDialog(elements, title, self.MOST_subprogram.draw_source)
+        elif menu_type == "calculation":
+            menu = CalculationMenuDialog(elements, title, self.MOST_subprogram.start_subprogram)
         else:
             menu = InputMenuDialog(elements, title)
+
         menu.exec()
 
     def open_isoline_settings_menu(self):
@@ -250,10 +251,10 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.plot_widget.set_plot(plot_name)
         plot: HeatmapPlotBuilder = self.plot_widget.get_plot_by_name(plot_name)
         plot.clear_points()
-        self.marigram_points = plot.get_input_points()
-        plot.draw_points(self.marigram_points)
+        marigram_points = plot.get_input_points()
+        plot.draw_points(marigram_points)
 
-        self.MOST_subprogram.marigram_points = self.marigram_points
+        self.MOST_subprogram.marigram_points = marigram_points
 
         if self.MOST_subprogram.calculated & (self.MOST_subprogram.marigram_points != []):
             self.action_marigrams.setEnabled(True)
@@ -267,7 +268,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         y = self.MOST_subprogram.ini_data_elements["ellipse center y location"].get_current_value()
         x_step = self.MOST_subprogram.ini_data_elements["x-step"].get_current_value()
         y_step = self.MOST_subprogram.ini_data_elements["y-step"].get_current_value()
-        self.bottom_plot.draw_source(
+        self.MOST_subprogram.bottom_plot.draw_source(
             (x, y),
             (self.MOST_subprogram.ini_data_elements["ellipse half x length"].get_current_value() * 2) / x_step,
             (self.MOST_subprogram.ini_data_elements["ellipse half y length"].get_current_value() * 2) / y_step
@@ -318,9 +319,10 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             print("no file name")
             return
 
+        marigram_points = self.MOST_subprogram.marigram_points
         file = open(file_name, "w")
-        for i in range(len(self.marigram_points)):
-            s = str(self.marigram_points[i]) + " " + str(self.marigrams_plot_data[i]) + '\n'
+        for i in range(len(marigram_points)):
+            s = str(marigram_points[i]) + " " + str(self.MOST_subprogram.marigrams_plot_data[i]) + '\n'
             file.write(s)
 
         file.close()

@@ -13,25 +13,25 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="vertical_layout">
    <item>
-    <layout class="QGridLayout" name="gridLayout">
+    <layout class="QGridLayout" name="parameters_grid_layout">
      <property name="sizeConstraint">
       <enum>QLayout::SetNoConstraint</enum>
      </property>
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="buttons_horizontal_layout">
      <item>
-      <widget class="QPushButton" name="pushButton_ok">
+      <widget class="QPushButton" name="push_button_ok">
        <property name="text">
         <string>OK</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_cancel">
+      <widget class="QPushButton" name="push_button_cancel">
        <property name="text">
         <string>Cancel</string>
        </property>
@@ -44,7 +44,7 @@
  <resources/>
  <connections>
   <connection>
-   <sender>pushButton_cancel</sender>
+   <sender>push_button_cancel</sender>
    <signal>clicked()</signal>
    <receiver>Dialog</receiver>
    <slot>close()</slot>

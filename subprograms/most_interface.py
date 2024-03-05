@@ -105,9 +105,8 @@ class MOSTInterface(SubprogramInterface):
         # self.setCentralWidget(self.calculation_screen.get_screen())
 
     def get_calculation_screen(self):
-        if not self.calculation_screen:
-            steps = self.ini_data_elements["number of time steps"].get_current_value()
-            self.calculation_screen = MOSTComputationScreen(steps)
+        steps = self.ini_data_elements["number of time steps"].get_current_value()
+        self.calculation_screen = MOSTComputationScreen(steps)
 
         return self.calculation_screen.get_screen()
 
