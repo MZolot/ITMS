@@ -1,11 +1,7 @@
 import ui_elements.qt_designer_ui.main_ui as main_ui
-# from ui_elements.load_data_file_selection_dialog import *
 from ui_elements.input_dialog import *
-# from ui_elements.waiting_screens import *
 from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
 from ui_elements.static_settings_dialog import StaticSettingsDialog
-# from data_entry import DataEntry
-# from file_loader import *
 from subprograms.most_interface import *
 from subprograms.static_interface import *
 from plots.stacked_plots_widget import PlotWidget
@@ -78,14 +74,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                                  self.show_loading_screen,
                                                  self.show_static_result)
 
-        # self.most_ini_data_elements: dict[str, DataEntry] = {}
-        # with open(most_config_file_name, 'r') as j:
-        #     from_json = json.loads(j.read())
-        #     for element in from_json:
-        #         self.most_ini_data_elements[element["name"]] = DataEntry(element["name"], element["label_text"],
-        #                                                                  element["default_value"], element["unit"],
-        #                                                                  element["is_float"])
-
         self.most_input_menu_to_elements = {
             "area": ["x-size", "y-size", "x-step", "y-step", "lowest depth"],
             "size": ["x-size", "y-size"],
@@ -112,9 +100,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.bottom_map = np.transpose(np.tile(self.bottom_profile, (1500, 1)))
         # self.bottom_map = np.tile(self.bottom_profile, (1500, 1))
 
-        # self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
-        # self.draw_source()
-        # self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
         self.plot_widget = PlotWidget({"bottom": self.MOST_subprogram.bottom_plot})
 
         self.wave_profile_end_points = []
@@ -142,7 +127,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.set_actions()
 
         self.setCentralWidget(self.plot_widget.get_widget())
-        # self.draw_source()
 
     def set_actions(self):
         self.action_size.triggered.connect(
@@ -173,7 +157,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         elements = []
         for n in element_names:
             elements.append(self.MOST_subprogram.ini_data_elements[n])
-            # elements.append(self.most_ini_data_elements[n])
         if menu_type == "source":
             menu = SourceMenuDialog(elements, title, self.MOST_subprogram.draw_source)
         elif menu_type == "calculation":
@@ -191,12 +174,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         menu = FileSelectionMenuDialog(self.MOST_subprogram.program_file_names, self.MOST_subprogram.load_results)
         menu.exec()
 
-    # def save_most_parameters(self):
-    #     self.MOST_subprogram.save_parameters()
-
-    # def calculate_most(self):
-    #     self.MOST_subprogram.start_subprogram()
-
     def show_most_calculation_screen(self):
         calculation_screen = self.MOST_subprogram.get_calculation_screen()
         self.setCentralWidget(calculation_screen)
@@ -204,9 +181,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     def show_loading_screen(self):
         loading_screen = self.MOST_subprogram.get_loading_screen()
         self.setCentralWidget(loading_screen)
-
-    # def load_most_result(self):
-    #     self.MOST_subprogram.load_results()
 
     def parse_initial_data_file(self):  # TODO: change to work for static
         f = open(self.file_names["most_initial"], "r")
@@ -262,17 +236,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     def plot_marigrams(self):
         self.MOST_subprogram.plot_marigrams()
         self.plot_widget.set_plot("marigrams")
-
-    def draw_source(self):  # TODO
-        x = self.MOST_subprogram.ini_data_elements["ellipse center x location"].get_current_value()
-        y = self.MOST_subprogram.ini_data_elements["ellipse center y location"].get_current_value()
-        x_step = self.MOST_subprogram.ini_data_elements["x-step"].get_current_value()
-        y_step = self.MOST_subprogram.ini_data_elements["y-step"].get_current_value()
-        self.MOST_subprogram.bottom_plot.draw_source(
-            (x, y),
-            (self.MOST_subprogram.ini_data_elements["ellipse half x length"].get_current_value() * 2) / x_step,
-            (self.MOST_subprogram.ini_data_elements["ellipse half y length"].get_current_value() * 2) / y_step
-        )
 
     def draw_wave_profile(self):
         self.plot_widget.set_plot("heatmap")

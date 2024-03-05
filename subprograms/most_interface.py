@@ -99,11 +99,6 @@ class MOSTInterface(SubprogramInterface):
         if stdout != '':
             self.calculation_screen.update_progress_bar(int(stdout))
 
-    def show_waiting_screen(self):
-        steps = self.ini_data_elements["number of time steps"].get_current_value()
-        self.calculation_screen = MOSTComputationScreen(steps)
-        # self.setCentralWidget(self.calculation_screen.get_screen())
-
     def get_calculation_screen(self):
         steps = self.ini_data_elements["number of time steps"].get_current_value()
         self.calculation_screen = MOSTComputationScreen(steps)
@@ -111,7 +106,10 @@ class MOSTInterface(SubprogramInterface):
         return self.calculation_screen.get_screen()
 
     def parse_parameters(self):
-        pass
+        f = open(self.program_file_names["initial"], "r")
+        for parameter in self.ini_data_elements.values():
+            new_value = f.readline().split()[0]
+            parameter.set_current_value(new_value)
 
     def load_results(self):
         # self.marigram_points = []

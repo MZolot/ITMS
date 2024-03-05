@@ -67,9 +67,9 @@ class STATICInterface(SubprogramInterface):
         self.process.finished.connect(self.load_results)
         self.process.start(commands)
 
-    def show_waiting_screen(self):
+    def get_calculation_screen(self):
         self.calculation_screen = STATICComputationScreen()
-        # self.setCentralWidget(self.calculation_screen.get_screen())
+        return self.calculation_screen.get_screen()
 
     def parse_parameters(self):
         pass
@@ -91,8 +91,10 @@ class STATICInterface(SubprogramInterface):
 
         self.calculated = True
 
-        self.heatmap_plot = HeatmapPlotBuilder(self.result)
-        self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.result, levels=self.isoline_levels)
+        self.heatmap_plot = HeatmapPlotBuilder(self.result, default_cmap=False)
+        self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.result,
+                                                                   levels=self.isoline_levels,
+                                                                   use_default_cmap=False)
         self.heatmap_3d_plot = Heatmap3DPlotBuilder(self.result)
 
         self.plot_widget.add_plot("heatmap", self.heatmap_plot)
