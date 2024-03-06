@@ -17,11 +17,11 @@ class IsolineSettingsDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
             self.scroll_area_layout.addWidget(line_edit)
             self.line_edits.append(line_edit)
 
-        self.button_box.accepted.connect(self._ok_button_pushed)
+        self.button_box.accepted.connect(self.ok_button_pushed)
         self.push_button_add.clicked.connect(self.add_level)
         self.push_button_delete.clicked.connect(self.delete_level)
 
-    def _ok_button_pushed(self):
+    def ok_button_pushed(self):
         for i in range(len(self.line_edits)):
             value = self.line_edits[i].text()
             if value == "":

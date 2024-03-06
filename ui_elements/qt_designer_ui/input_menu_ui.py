@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'menu.ui'
+# Form implementation generated from reading ui file '.\input_parameters_menu.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -15,28 +15,28 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(217, 61)
-        self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.gridLayout = QtWidgets.QGridLayout()
-        self.gridLayout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
-        self.gridLayout.setObjectName("gridLayout")
-        self.verticalLayout.addLayout(self.gridLayout)
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.pushButton_ok = QtWidgets.QPushButton(Dialog)
-        self.pushButton_ok.setObjectName("pushButton_ok")
-        self.horizontalLayout_2.addWidget(self.pushButton_ok)
-        self.pushButton_cancel = QtWidgets.QPushButton(Dialog)
-        self.pushButton_cancel.setObjectName("pushButton_cancel")
-        self.horizontalLayout_2.addWidget(self.pushButton_cancel)
-        self.verticalLayout.addLayout(self.horizontalLayout_2)
+        self.vertical_layout = QtWidgets.QVBoxLayout(Dialog)
+        self.vertical_layout.setObjectName("vertical_layout")
+        self.parameters_grid_layout = QtWidgets.QGridLayout()
+        self.parameters_grid_layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
+        self.parameters_grid_layout.setObjectName("parameters_grid_layout")
+        self.vertical_layout.addLayout(self.parameters_grid_layout)
+        self.buttons_horizontal_layout = QtWidgets.QHBoxLayout()
+        self.buttons_horizontal_layout.setObjectName("buttons_horizontal_layout")
+        self.push_button_ok = QtWidgets.QPushButton(Dialog)
+        self.push_button_ok.setObjectName("push_button_ok")
+        self.buttons_horizontal_layout.addWidget(self.push_button_ok)
+        self.push_button_cancel = QtWidgets.QPushButton(Dialog)
+        self.push_button_cancel.setObjectName("push_button_cancel")
+        self.buttons_horizontal_layout.addWidget(self.push_button_cancel)
+        self.vertical_layout.addLayout(self.buttons_horizontal_layout)
 
         self.retranslateUi(Dialog)
-        self.pushButton_cancel.clicked.connect(Dialog.close) # type: ignore
+        self.push_button_cancel.clicked.connect(Dialog.close) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.pushButton_ok.setText(_translate("Dialog", "OK"))
-        self.pushButton_cancel.setText(_translate("Dialog", "Cancel"))
+        self.push_button_ok.setText(_translate("Dialog", "OK"))
+        self.push_button_cancel.setText(_translate("Dialog", "Cancel"))
