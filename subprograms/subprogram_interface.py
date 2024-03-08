@@ -1,12 +1,18 @@
 from data_entry import DataEntry
 from plots.stacked_plots_widget import PlotWidget
-from PyQt5.QtCore import QProcess, QThread
+from PyQt5.QtCore import QProcess
 
 import json
 
 
 class SubprogramInterface:
-    def __init__(self):
+    def __init__(self, subprogram_directory, subprogram_file_names):
+        self.working_directory = subprogram_directory
+
+        self.program_file_names = {}
+        for f in subprogram_file_names.keys():
+            self.program_file_names[f] = subprogram_directory + "\\" + subprogram_file_names[f]
+
         self.ini_data_elements: dict[str, DataEntry] = {}
         self.input_menu_to_elements: dict[str, str] = {}
 
@@ -37,14 +43,22 @@ class SubprogramInterface:
                                                                     element["default_value"], element["unit"],
                                                                     element["is_float"])
 
-    def save_parameters(self): pass
+    def save_parameters(self):
+        pass
 
-    def start_subprogram(self): pass
+    def start_subprogram(self):
+        pass
 
-    def show_waiting_screen(self): pass
+    # TODO: disable all actions while subprogram is working
 
-    def parse_parameters(self): pass
+    def show_waiting_screen(self):
+        pass
 
-    def load_results(self): pass
+    def parse_parameters(self):
+        pass
 
-    def visualise_results(self): pass
+    def load_results(self):
+        pass
+
+    def visualise_results(self):
+        pass

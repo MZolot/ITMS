@@ -16,40 +16,34 @@ import numpy as np
 import sys
 
 most_config_file_name = "resources/most_parameters_config.json"
-most_ini_data_default_file_name = "MOST/ini_data.txt"
-most_exe_file_name = "MOST/wave_1500x900_01.exe"
+most_ini_data_default_file_name = "subprograms/MOST/ini_data.txt"
+most_exe_file_name = "subprograms/MOST/wave_1500x900_01.exe"
 
-bottom_profile_file_name = "MOST/koryto_profile.txt"
+bottom_profile_file_name = "subprograms/MOST/koryto_profile.txt"
 
-height_default_file_name = "MOST/heigh.dat"
-max_height_default_file_name = "MOST/maxheigh.dat"
+height_default_file_name = "subprograms/MOST/heigh.dat"
+max_height_default_file_name = "subprograms/MOST/maxheigh.dat"
 
 static_config_file_name = "resources/static_parameters_config.json"
-static_ini_data_default_file_name = "STATIC/static_param.txt"
-static_exe_file_name = "STATIC/Static.exe"
-static_results_file_name = "STATIC/static.bin"
+static_ini_data_default_file_name = "subprograms/STATIC/static_param.txt"
+static_exe_file_name = "subprograms/STATIC/Static.exe"
+static_results_file_name = "subprograms/STATIC/static.bin"
 
 
 class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     def __init__(self):
         super().__init__()
 
-        self.file_names = {
-            "most_initial": most_ini_data_default_file_name,
-            "height": height_default_file_name,
-            "max_height": max_height_default_file_name,
-            "static_initial": static_ini_data_default_file_name
-        }
-
         most_files = {
-            "initial": most_ini_data_default_file_name,
-            "height": height_default_file_name,
-            "max_height": max_height_default_file_name
+            "exe": "wave_1500x900_01.exe",
+            "initial": "ini_data.txt",
+            "height": "heigh.dat",
+            "max_height": "maxheigh.dat"
         }
 
         self.MOST_subprogram = MOSTInterface(config_file_name=most_config_file_name,
+                                             subprogram_directory="subprograms\\MOST",
                                              subprogram_file_names=most_files,
-                                             exe_file_name=most_exe_file_name,
                                              bottom_profile_file_name=bottom_profile_file_name,
                                              save_wave_profile_callback=self.save_wave_profile_data,
                                              save_marigrams_callback=self.save_marigrams_data,
@@ -58,13 +52,14 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                              show_results_callback=self.show_most_result)
 
         static_files = {
-            "initial": static_ini_data_default_file_name,
-            "result": static_results_file_name
+            "exe": "Static.exe",
+            "initial": "static_param.txt",
+            "result": "static.bin"
         }
 
         self.STATIC_subprogram = STATICInterface(config_file_name=static_config_file_name,
+                                                 subprogram_directory="subprograms\\STATIC",
                                                  subprogram_file_names=static_files,
-                                                 exe_file_name=static_exe_file_name,
                                                  save_wave_profile_callback=self.save_wave_profile_data,
                                                  show_calculation_screen_callback=self.show_static_calculation_screen,
                                                  show_loading_screen_callback=self.show_loading_screen,
@@ -88,8 +83,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     def set_actions(self):
         self.action_size.triggered.connect(
             lambda: self.open_most_input_menu(self.MOST_subprogram.input_menu_to_elements["size"], "Size parameters"))
-        self.action_steps.triggered.connect(
-            lambda: self.open_most_input_menu(self.MOST_subprogram.input_menu_to_elements["steps"], "Steps parameters"))
+        # self.action_steps.triggered.connect(
+        #   lambda: self.open_most_input_menu(self.MOST_subprogram.input_menu_to_elements["steps"], "Steps parameters"))
         self.action_source_parameters.triggered.connect(
             lambda: self.open_most_input_menu(self.MOST_subprogram.input_menu_to_elements["source"],
                                               "Source parameters",
@@ -318,6 +313,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def show_static_results(self):
         self.plot_widget = self.STATIC_subprogram.plot_widget
+        self.plot_widget.add_plot("bottom", HeatmapPlotBuilder(self.bottom_map))
+        # self.plot_widget = PlotWidget({"bottom": self.MOST_subprogram.bottom_plot})
 
         self.action_heatmap.setEnabled(True)
         self.action_heatmap_with_contour.setEnabled(True)

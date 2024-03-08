@@ -16,15 +16,13 @@ import struct
 class STATICInterface(SubprogramInterface):
     def __init__(self,
                  config_file_name,
+                 subprogram_directory,
                  subprogram_file_names,
-                 exe_file_name,
                  save_wave_profile_callback,
                  show_calculation_screen_callback,
                  show_loading_screen_callback,
                  show_results_callback):
-        super().__init__()
-        self.program_file_names = subprogram_file_names
-        self.exe_file_name = exe_file_name
+        super().__init__(subprogram_directory, subprogram_file_names)
         self.save_wave_profile = save_wave_profile_callback
         self.show_calculation_screen_callback = show_calculation_screen_callback
         self.show_loading_screen_callback = show_loading_screen_callback
@@ -57,10 +55,10 @@ class STATICInterface(SubprogramInterface):
         self.show_calculation_screen_callback()
         # self.show_waiting_screen()
 
-        commands = self.exe_file_name
+        commands = self.program_file_names["exe"]
 
         self.process = QProcess()
-        self.process.setWorkingDirectory('STATIC\\')
+        self.process.setWorkingDirectory(self.working_directory)
         self.process.finished.connect(self.load_results)
         self.process.start(commands)
 
@@ -72,15 +70,21 @@ class STATICInterface(SubprogramInterface):
         pass
 
     def load_results(self):
+        print("calculated")
         self.show_loading_screen_callback()
 
         n1 = self.ini_data_elements["N1"].get_current_value()
         m1 = self.ini_data_elements["M1"].get_current_value()
         self.result = np.zeros((n1, m1), float)
         f = open(self.program_file_names["result"], "rb")
+        f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
         for j in range(0, m1):
             for i in range(0, n1):
                 self.result[i][j] = struct.unpack('d', f.read(8))[0]
+                f_out.write(format(self.result[i][j], '.3f') + " ")
+            f_out.write("\n")
+        f.close()
+        f_out.close()
         self.visualise_results()
 
     def visualise_results(self):
@@ -90,7 +94,7 @@ class STATICInterface(SubprogramInterface):
 
         self.isoline_plot_data = self.result
 
-        self.heatmap_plot = HeatmapPlotBuilder(self.result, default_cmap=True)
+        self.heatmap_plot = HeatmapPlotBuilder(self.result, default_cmap=False)
         self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.result,
                                                                    levels=self.isoline_levels,
                                                                    use_default_cmap=False)

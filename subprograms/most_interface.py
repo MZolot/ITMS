@@ -17,24 +17,20 @@ import numpy as np
 class MOSTInterface(SubprogramInterface):
     def __init__(self,
                  config_file_name,
+                 subprogram_directory,
                  subprogram_file_names,
-                 exe_file_name,
                  bottom_profile_file_name,
                  save_wave_profile_callback,
                  save_marigrams_callback,
                  show_calculation_screen_callback,
                  show_loading_screen_callback,
                  show_results_callback):
-        super().__init__()
-        self.program_file_names = subprogram_file_names
-        self.exe_file_name = exe_file_name
+        super().__init__(subprogram_directory, subprogram_file_names)
         self.save_wave_profile = save_wave_profile_callback
         self.save_marigrams = save_marigrams_callback
         self.show_calculation_screen_callback = show_calculation_screen_callback
         self.show_loading_screen_callback = show_loading_screen_callback
         self.show_results_callback = show_results_callback
-
-        print(subprogram_file_names)
 
         self.load_initial_data(config_file_name)
 
@@ -60,8 +56,7 @@ class MOSTInterface(SubprogramInterface):
 
         self.input_menu_to_elements = {
             "area": ["x-size", "y-size", "x-step", "y-step", "lowest depth"],
-            "size": ["x-size", "y-size"],
-            "steps": ["x-step", "y-step"],
+            "size": ["x-size", "y-size", "x-step", "y-step"],
             "source": ["max elevation at source", "ellipse half x length", "ellipse half y length",
                        "ellipse center x location", "ellipse center y location", "lowest depth"],
             "calculation": ["time step", "number of time steps", "number of steps between surface output"]
@@ -84,10 +79,10 @@ class MOSTInterface(SubprogramInterface):
         self.save_parameters()
         self.show_calculation_screen_callback()
 
-        commands = self.exe_file_name
+        commands = self.program_file_names["exe"]
 
         self.process = QProcess()
-        self.process.setWorkingDirectory('MOST\\')
+        self.process.setWorkingDirectory(self.working_directory)
         self.process.readyReadStandardOutput.connect(self.update_progress)
         self.process.finished.connect(self.load_results)
         self.process.start(commands)

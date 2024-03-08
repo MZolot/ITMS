@@ -60,7 +60,7 @@
         "label_text": "Ellipse center y location",
         "unit": "",
         "is_float": false,
-        "default_value": 750
+        "default_value": 450
     },
     {
         "name": "lowest depth",
@@ -81,7 +81,7 @@
         "label_text": "Number of time steps",
         "unit": "",
         "is_float": false,
-        "default_value": 5
+        "default_value": 10
     },
     {
         "name": "number of steps between surface output",

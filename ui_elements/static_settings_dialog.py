@@ -78,7 +78,6 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
         return layout
 
     def calculate_button_pushed(self):
-        print("calculate!")
         for i in self.parameters.keys():
             new_value = self.line_edits[i].text()
             if new_value == "":

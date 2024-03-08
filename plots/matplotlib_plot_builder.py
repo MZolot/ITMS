@@ -171,7 +171,7 @@ class MarigramsPlotBuilder(PlotBuilder):
                 curr_ax = self.axes[i]
             curr_ax.plot(xs, point_data)
             curr_ax.set_title("x = {}, y = {}".format(int(point_coords[0]), int(point_coords[1])), x=1.11, y=0.2)
-            curr_ax.set_ylim([-1, 1])
+            curr_ax.set_ylim([-1, 1.1])
             curr_ax.label_outer()
             curr_ax.spines['top'].set_visible(False)
             curr_ax.spines['right'].set_visible(False)
