@@ -10,10 +10,8 @@ class PlotWidget:
         self.plot_name_to_widget: dict[str, QWidget] = {}
         self.plot_name_to_plot: dict[str, PlotBuilder] = {}
         if plots:
-            self.plot_name_to_plot = plots
             for p in plots.keys():
-                self.plot_name_to_widget[p] = plots[p].get_widget()
-                self.stacked_widget.addWidget(self.plot_name_to_widget[p])
+                self.add_plot(p, plots[p])
 
     def get_widget(self):
         return self.stacked_widget
@@ -31,6 +29,7 @@ class PlotWidget:
         self.stacked_widget.setCurrentWidget(self.plot_name_to_widget[plot_name])
 
     def add_plot(self, plot_name: str, plot: PlotBuilder):
+        plot.update_canvas()
         if self.plot_name_to_widget.keys().__contains__(plot_name):
             plot_index = self.stacked_widget.indexOf(self.plot_name_to_widget[plot_name])
             self.plot_name_to_widget[plot_name] = plot.get_widget()

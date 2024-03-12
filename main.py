@@ -34,6 +34,11 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     def __init__(self):
         super().__init__()
 
+        self.bottom_profile = np.loadtxt(bottom_profile_file_name)
+        self.bottom_map = np.transpose(np.tile(self.bottom_profile, (1500, 1)))
+        # self.bottom_map = np.tile(self.bottom_profile, (1500, 1))
+        self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
+
         most_files = {
             "exe": "wave_1500x900_01.exe",
             "initial": "ini_data.txt",
@@ -44,7 +49,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.MOST_subprogram = MOSTInterface(config_file_name=most_config_file_name,
                                              subprogram_directory="subprograms\\MOST",
                                              subprogram_file_names=most_files,
-                                             bottom_profile_file_name=bottom_profile_file_name,
+                                             bottom_plot=self.bottom_plot,
                                              save_wave_profile_callback=self.save_wave_profile_data,
                                              save_marigrams_callback=self.save_marigrams_data,
                                              show_calculation_screen_callback=self.show_most_calculation_screen,
@@ -60,16 +65,15 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.STATIC_subprogram = STATICInterface(config_file_name=static_config_file_name,
                                                  subprogram_directory="subprograms\\STATIC",
                                                  subprogram_file_names=static_files,
+                                                 bottom_plot=self.bottom_plot,
                                                  save_wave_profile_callback=self.save_wave_profile_data,
                                                  show_calculation_screen_callback=self.show_static_calculation_screen,
                                                  show_loading_screen_callback=self.show_loading_screen,
                                                  show_results_callback=self.show_static_results)
 
-        self.bottom_profile = np.loadtxt(bottom_profile_file_name)
-        self.bottom_map = np.transpose(np.tile(self.bottom_profile, (1500, 1)))
-        # self.bottom_map = np.tile(self.bottom_profile, (1500, 1))
-
         self.plot_widget = PlotWidget({"bottom": self.MOST_subprogram.bottom_plot})
+
+        # self.MOST_subprogram.draw_elliptical_source()
 
         self.wave_profile_end_points = []
         self.wave_profile_data = None
@@ -115,7 +119,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         for n in element_names:
             elements.append(self.MOST_subprogram.ini_data_elements[n])
         if menu_type == "source":
-            menu = SourceMenuDialog(elements, title, self.MOST_subprogram.draw_source)
+            menu = SourceMenuDialog(elements, title, lambda: self.MOST_subprogram.draw_source(self.bottom_plot))
         elif menu_type == "calculation":
             menu = CalculationMenuDialog(elements, title, self.MOST_subprogram.start_subprogram)
         else:
@@ -142,6 +146,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     # def parse_initial_data_file(self):  # TODO: change to work for static
     def show_most_result(self):
         self.plot_widget = self.MOST_subprogram.plot_widget
+        self.plot_widget.add_plot("bottom", self.bottom_plot)
+        self.MOST_subprogram.draw_source(self.bottom_plot)
 
         self.action_heatmap.setEnabled(True)
         self.action_heatmap_with_contour.setEnabled(True)
@@ -313,7 +319,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def show_static_results(self):
         self.plot_widget = self.STATIC_subprogram.plot_widget
-        self.plot_widget.add_plot("bottom", HeatmapPlotBuilder(self.bottom_map))
+        self.plot_widget.add_plot("bottom", self.bottom_plot)
         # self.plot_widget = PlotWidget({"bottom": self.MOST_subprogram.bottom_plot})
 
         self.action_heatmap.setEnabled(True)

@@ -22,17 +22,20 @@ class PlotBuilder:
 
         self.canvas = FigureCanvas(self.figure)
         self.toolbar: NavigationToolbar = NavigationToolbar(self.canvas)
-        self.container: QtWidgets.QWidget | None = None
 
     def get_widget(self):
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
 
-        self.container = QtWidgets.QWidget()
-        self.container.setLayout(layout)
+        container = QtWidgets.QWidget()
+        container.setLayout(layout)
 
-        return self.container
+        return container
+
+    def update_canvas(self):
+        self.canvas = FigureCanvas(self.figure)
+        self.toolbar: NavigationToolbar = NavigationToolbar(self.canvas)
 
 
 class HeatmapPlotBuilder(PlotBuilder):
@@ -68,8 +71,8 @@ class HeatmapPlotBuilder(PlotBuilder):
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
 
-    def draw_source(self, center, width, height, color='white'):
-        self.clear_source()
+    def draw_elliptical_source(self, center, width, height, color='white'):
+        self.clear_elliptical_source()
         self.source_center = self.axes.plot(center[0], center[1], marker='+', markeredgecolor=color)
         self.ellipse = Ellipse(center, width, height, facecolor='none', edgecolor=color)
         self.axes.add_patch(self.ellipse)
@@ -81,7 +84,11 @@ class HeatmapPlotBuilder(PlotBuilder):
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
 
-    def clear_source(self):
+    def draw_contour(self, x, y, z, levels):
+        cmap = ['b' for x in levels if x < 0] + ['r' for x in levels if x >= 0]
+        self.axes.contour(x, y, z, colors=cmap, origin='image', levels=levels)
+
+    def clear_elliptical_source(self):
         if self.source_center:
             self.source_center[0].remove()
         if self.ellipse:

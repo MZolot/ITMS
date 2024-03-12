@@ -18,6 +18,7 @@ class STATICInterface(SubprogramInterface):
                  config_file_name,
                  subprogram_directory,
                  subprogram_file_names,
+                 bottom_plot: HeatmapPlotBuilder,
                  save_wave_profile_callback,
                  show_calculation_screen_callback,
                  show_loading_screen_callback,
@@ -30,6 +31,9 @@ class STATICInterface(SubprogramInterface):
 
         self.load_initial_data(config_file_name)
 
+        self.bottom_plot = bottom_plot
+        self.plot_widget.add_plot("bottom", self.bottom_plot)
+
         self.isoline_levels = [-0.5, -0.4, -0.3, -0.2, -0.1, -0.05, 0.0, 0.01, 0.05, 0.1, 0.4]
 
         self.result = None
@@ -39,7 +43,8 @@ class STATICInterface(SubprogramInterface):
 
         self.input_menu_to_elements = {
             "fault": ["L", "W", "DE", "LA", "TE", "D0", "h0"],
-            "calculation": ["N1", "M1", "Dx", "Dy", "jj", "kk"]
+            "calculation": ["N1", "M1", "Dx", "Dy", "jj", "kk"],
+            "coordinates": ["X", "Y"]
         }
 
     def save_parameters(self):

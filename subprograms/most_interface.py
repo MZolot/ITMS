@@ -11,7 +11,7 @@ from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            MarigramsPlotBuilder)
 from PyQt5.QtCore import QProcess, QThread
 
-import numpy as np
+# import numpy as np
 
 
 class MOSTInterface(SubprogramInterface):
@@ -19,7 +19,7 @@ class MOSTInterface(SubprogramInterface):
                  config_file_name,
                  subprogram_directory,
                  subprogram_file_names,
-                 bottom_profile_file_name,
+                 bottom_plot: HeatmapPlotBuilder,
                  save_wave_profile_callback,
                  save_marigrams_callback,
                  show_calculation_screen_callback,
@@ -34,12 +34,13 @@ class MOSTInterface(SubprogramInterface):
 
         self.load_initial_data(config_file_name)
 
-        self.bottom_profile = np.loadtxt(bottom_profile_file_name)
-        self.bottom_map = np.transpose(np.tile(self.bottom_profile, (1500, 1)))
+        # self.bottom_profile = np.loadtxt(bottom_profile_file_name)
+        # self.bottom_map = np.transpose(np.tile(self.bottom_profile, (1500, 1)))
 
         # Пока не будет понятно, что должно быть на главном экране при запуске
-        self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
-        self.draw_source()
+        # self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
+        # self.draw_source()
+        self.bottom_plot = bottom_plot
         self.plot_widget.add_plot("bottom", self.bottom_plot)
 
         self.marigram_points = []
@@ -126,9 +127,10 @@ class MOSTInterface(SubprogramInterface):
         return loading_screen.get_screen()
 
     def visualise_results(self):
-        self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
-        self.draw_source()
-        self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
+        # self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
+        # self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
+        # self.draw_source()
+        self.plot_widget = PlotWidget()
 
         loaded_files = self.loader.get_results()
         # if self.program_file_names["initial"] != self.program_file_names["default_initial"]:
@@ -155,12 +157,12 @@ class MOSTInterface(SubprogramInterface):
 
         self.show_results_callback()
 
-    def draw_source(self):
+    def draw_source(self, plot):
         x = self.ini_data_elements["ellipse center x location"].get_current_value()
         y = self.ini_data_elements["ellipse center y location"].get_current_value()
         x_step = self.ini_data_elements["x-step"].get_current_value()
         y_step = self.ini_data_elements["y-step"].get_current_value()
-        self.bottom_plot.draw_source(
+        plot.draw_elliptical_source(
             (x, y),
             (self.ini_data_elements["ellipse half x length"].get_current_value() * 2) / x_step,
             (self.ini_data_elements["ellipse half y length"].get_current_value() * 2) / y_step
