@@ -1,9 +1,13 @@
 import ui_elements.qt_designer_ui.main_ui as main_ui
 from ui_elements.input_dialog import *
 from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
+from ui_elements.load_data_file_selection_dialog import FileSelectionMenuDialog
 from ui_elements.static_settings_dialog import StaticSettingsDialog
-from subprograms.most_interface import *
-from subprograms.static_interface import *
+
+from subprograms.subprogram_interface import SubprogramInterface
+from subprograms.most_interface import MOSTInterface
+from subprograms.static_interface import STATICInterface
+
 from plots.stacked_plots_widget import PlotWidget
 from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            HeatmapContourPlotBuilder,
@@ -39,7 +43,22 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         # self.bottom_map = np.tile(self.bottom_profile, (1500, 1))
         self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
 
-        most_files = {
+        self.static_files = {
+            "exe": "Static.exe",
+            "initial": "static_param.txt",
+            "result": "static.bin"
+        }
+
+        self.STATIC_subprogram = STATICInterface(config_file_name=static_config_file_name,
+                                                 subprogram_directory="subprograms\\STATIC",
+                                                 subprogram_file_names=self.static_files,
+                                                 bottom_plot=self.bottom_plot,
+                                                 save_wave_profile_callback=self.save_wave_profile_data,
+                                                 show_calculation_screen_callback=self.show_static_calculation_screen,
+                                                 show_loading_screen_callback=self.show_loading_screen,
+                                                 show_results_callback=self.show_static_results)
+
+        self.most_files = {
             "exe": "wave_1500x900_01.exe",
             "initial": "ini_data.txt",
             "height": "heigh.dat",
@@ -48,28 +67,22 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.MOST_subprogram = MOSTInterface(config_file_name=most_config_file_name,
                                              subprogram_directory="subprograms\\MOST",
-                                             subprogram_file_names=most_files,
+                                             subprogram_with_static_directory="subprograms\\MOST_with_STATIC",
+                                             subprogram_file_names=self.most_files,
                                              bottom_plot=self.bottom_plot,
                                              save_wave_profile_callback=self.save_wave_profile_data,
                                              save_marigrams_callback=self.save_marigrams_data,
                                              show_calculation_screen_callback=self.show_most_calculation_screen,
                                              show_loading_screen_callback=self.show_loading_screen,
-                                             show_results_callback=self.show_most_result)
+                                             show_results_callback=self.show_most_result,
+                                             static=self.STATIC_subprogram)
 
-        static_files = {
-            "exe": "Static.exe",
-            "initial": "static_param.txt",
-            "result": "static.bin"
+        self.most_with_static_files = {
+            "exe": "wave_1500x900_01_04.exe",
+            "initial": "ini_data.txt",
+            "height": "heigh.dat",
+            "max_height": "maxheigh.dat"
         }
-
-        self.STATIC_subprogram = STATICInterface(config_file_name=static_config_file_name,
-                                                 subprogram_directory="subprograms\\STATIC",
-                                                 subprogram_file_names=static_files,
-                                                 bottom_plot=self.bottom_plot,
-                                                 save_wave_profile_callback=self.save_wave_profile_data,
-                                                 show_calculation_screen_callback=self.show_static_calculation_screen,
-                                                 show_loading_screen_callback=self.show_loading_screen,
-                                                 show_results_callback=self.show_static_results)
 
         self.plot_widget = PlotWidget({"bottom": self.MOST_subprogram.bottom_plot})
 
@@ -96,7 +109,10 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_calculation_parameters.triggered.connect(
             lambda: self.open_most_input_menu(self.MOST_subprogram.input_menu_to_elements["calculation"],
                                               "Calculation parameters", "calculation"))
-        self.action_calculate.triggered.connect(self.MOST_subprogram.start_subprogram)
+        self.action_calculate_most.triggered.connect(
+            lambda: self.MOST_subprogram.start_subprogram())
+        self.action_calculate_most_static.triggered.connect(
+            lambda: self.MOST_subprogram.start_subprogram(True))
 
         self.action_show_area.triggered.connect(
             lambda: self.plot_widget.set_plot("bottom"))
@@ -120,8 +136,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             elements.append(self.MOST_subprogram.ini_data_elements[n])
         if menu_type == "source":
             menu = SourceMenuDialog(elements, title, lambda: self.MOST_subprogram.draw_source(self.bottom_plot))
-        elif menu_type == "calculation":
-            menu = CalculationMenuDialog(elements, title, self.MOST_subprogram.start_subprogram)
+        # elif menu_type == "calculation":
+        #     menu = CalculationMenuDialog(elements, title, self.MOST_subprogram.start_subprogram)
         else:
             menu = InputMenuDialog(elements, title)
         menu.exec()
@@ -327,6 +343,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_3d_heatmap.setEnabled(True)
         # self.action_wave_profile_bar_chart.setEnabled(True)
         # self.action_draw_wave_profile.setEnabled(True)
+
+        self.action_calculate_most_static.setEnabled(True)
 
         self.action_heatmap.triggered.connect(
             lambda: self.plot_widget.set_plot("heatmap")

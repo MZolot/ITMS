@@ -44,18 +44,21 @@ class STATICInterface(SubprogramInterface):
         self.input_menu_to_elements = {
             "fault": ["L", "W", "DE", "LA", "TE", "D0", "h0"],
             "calculation": ["N1", "M1", "Dx", "Dy", "jj", "kk"],
-            "coordinates": ["X", "Y"]
+            "coordinates": ["x", "y"]
         }
 
     def save_parameters(self):
         ini_data_file = open(self.program_file_names["initial"], "w")
 
         for parameter in self.ini_data_elements.values():
+            if (parameter.name == "x") | (parameter.name == "y"):
+                continue
             input_data = parameter.name + "= " + str(parameter.get_current_value()) + '\n'
             ini_data_file.write(input_data)
         ini_data_file.close()
 
     def start_subprogram(self):
+        print(">> Starting STATIC")
         self.save_parameters()
         self.show_calculation_screen_callback()
         # self.show_waiting_screen()
@@ -75,21 +78,28 @@ class STATICInterface(SubprogramInterface):
         pass
 
     def load_results(self):
-        print("calculated")
+        print(">> STATIC finished running")
+        print(">> Loading STATIC results")
         self.show_loading_screen_callback()
 
         n1 = self.ini_data_elements["N1"].get_current_value()
         m1 = self.ini_data_elements["M1"].get_current_value()
         self.result = np.zeros((n1, m1), float)
         f = open(self.program_file_names["result"], "rb")
-        f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
         for j in range(0, m1):
             for i in range(0, n1):
                 self.result[i][j] = struct.unpack('d', f.read(8))[0]
-                f_out.write(format(self.result[i][j], '.3f') + " ")
-            f_out.write("\n")
         f.close()
+        self.result = np.flipud(self.result)
+
+        f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
+        transposed = np.transpose(self.result)
+        for j in range(0, m1):
+            for i in range(0, n1):
+                f_out.write(format(transposed[i][j], '.3f') + " ")
+            f_out.write("\n")
         f_out.close()
+
         self.visualise_results()
 
     def visualise_results(self):

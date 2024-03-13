@@ -1,11 +1,11 @@
 [{
-        "name": "X",
+        "name": "x",
         "label_text": "X-coordinate",
         "unit": "",
         "is_float": true,
         "default_value": 750
     },{
-        "name": "Y",
+        "name": "y",
         "label_text": "Y-coordinate",
         "unit": "",
         "is_float": true,

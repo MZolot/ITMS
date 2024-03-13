@@ -1,4 +1,5 @@
 from subprograms.subprogram_interface import SubprogramInterface
+from subprograms.static_interface import STATICInterface
 
 from ui_elements.load_data_file_selection_dialog import *
 from ui_elements.waiting_screens import *
@@ -11,20 +12,20 @@ from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            MarigramsPlotBuilder)
 from PyQt5.QtCore import QProcess, QThread
 
-# import numpy as np
-
 
 class MOSTInterface(SubprogramInterface):
     def __init__(self,
                  config_file_name,
                  subprogram_directory,
+                 subprogram_with_static_directory,
                  subprogram_file_names,
                  bottom_plot: HeatmapPlotBuilder,
                  save_wave_profile_callback,
                  save_marigrams_callback,
                  show_calculation_screen_callback,
                  show_loading_screen_callback,
-                 show_results_callback):
+                 show_results_callback,
+                 static: STATICInterface):
         super().__init__(subprogram_directory, subprogram_file_names)
         self.save_wave_profile = save_wave_profile_callback
         self.save_marigrams = save_marigrams_callback
@@ -34,12 +35,6 @@ class MOSTInterface(SubprogramInterface):
 
         self.load_initial_data(config_file_name)
 
-        # self.bottom_profile = np.loadtxt(bottom_profile_file_name)
-        # self.bottom_map = np.transpose(np.tile(self.bottom_profile, (1500, 1)))
-
-        # Пока не будет понятно, что должно быть на главном экране при запуске
-        # self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
-        # self.draw_source()
         self.bottom_plot = bottom_plot
         self.plot_widget.add_plot("bottom", self.bottom_plot)
 
@@ -51,6 +46,15 @@ class MOSTInterface(SubprogramInterface):
 
         self.height = None
         self.max_height = None
+
+        self.working_directory_with_static = subprogram_with_static_directory
+        self.program_with_static_file_names = super().add_directory_to_file_names(subprogram_with_static_directory,
+                                                                                  subprogram_file_names)
+        self.static: STATICInterface = static
+
+        self.elliptical_source = True
+        self.current_directory = self.working_directory
+        self.current_program_file_names = self.program_file_names
 
     def load_initial_data(self, config_file_name):
         super().load_initial_data(config_file_name)
@@ -68,22 +72,40 @@ class MOSTInterface(SubprogramInterface):
         menu.exec()
 
     def save_parameters(self):
-        ini_data_file = open(self.program_file_names["initial"], "w")
+        ini_data_file = open(self.current_program_file_names["initial"], "w")
 
         for i in self.ini_data_elements.values():
             input_data = str(i.get_current_value()) + "  --  " + i.label_text + '\n'
             ini_data_file.write(input_data)
+
+        if not self.elliptical_source:
+            static_x = self.static.ini_data_elements["N1"].get_current_value()
+            static_y = self.static.ini_data_elements["M1"].get_current_value()
+            input_data = str(static_x) + "  --  statik X size\n" + str(static_y) + "  --  statik Y size\n"
+            ini_data_file.write(input_data)
+
         ini_data_file.close()
 
-    def start_subprogram(self):
+    def start_subprogram(self, use_static=False):
         # TODO: это должно работать, только если программа запущена в первый раз, или если данные изменились
+        if use_static:
+            print(">> Starting MOST with STATIC source")
+            self.elliptical_source = False
+            self.current_directory = self.working_directory_with_static
+            self.current_program_file_names = self.program_with_static_file_names
+        else:
+            print(">> Starting MOST with elliptical source")
+            self.elliptical_source = True
+            self.current_directory = self.working_directory
+            self.current_program_file_names = self.program_file_names
+
         self.save_parameters()
         self.show_calculation_screen_callback()
 
-        commands = self.program_file_names["exe"]
+        commands = self.current_program_file_names["exe"]
 
         self.process = QProcess()
-        self.process.setWorkingDirectory(self.working_directory)
+        self.process.setWorkingDirectory(self.current_directory)
         self.process.readyReadStandardOutput.connect(self.update_progress)
         self.process.finished.connect(self.load_results)
         self.process.start(commands)
@@ -113,7 +135,8 @@ class MOSTInterface(SubprogramInterface):
         self.parse_parameters()
 
         self.thread = QThread()
-        self.loader = FileLoader([self.program_file_names["max_height"], self.program_file_names["height"]])
+        self.loader = FileLoader(
+            [self.current_program_file_names["max_height"], self.current_program_file_names["height"]])
         self.loader.moveToThread(self.thread)
         self.thread.started.connect(self.loader.run)
         self.loader.finished.connect(self.thread.quit)
@@ -135,8 +158,8 @@ class MOSTInterface(SubprogramInterface):
         loaded_files = self.loader.get_results()
         # if self.program_file_names["initial"] != self.program_file_names["default_initial"]:
         #     self.parse_parameters()
-        self.max_height = loaded_files[self.program_file_names["max_height"]]
-        self.height = loaded_files[self.program_file_names["height"]]
+        self.max_height = loaded_files[self.current_program_file_names["max_height"]]
+        self.height = loaded_files[self.current_program_file_names["height"]]
 
         self.isoline_plot_data = self.max_height
         self.bar_chart_data = self.max_height[3]
@@ -157,7 +180,13 @@ class MOSTInterface(SubprogramInterface):
 
         self.show_results_callback()
 
-    def draw_source(self, plot):
+    def draw_source(self, plot: HeatmapPlotBuilder):
+        if self.elliptical_source:
+            self.draw_elliptical_source(plot)
+        else:
+            self.draw_static_source(plot)
+
+    def draw_elliptical_source(self, plot: HeatmapPlotBuilder):
         x = self.ini_data_elements["ellipse center x location"].get_current_value()
         y = self.ini_data_elements["ellipse center y location"].get_current_value()
         x_step = self.ini_data_elements["x-step"].get_current_value()
@@ -167,6 +196,17 @@ class MOSTInterface(SubprogramInterface):
             (self.ini_data_elements["ellipse half x length"].get_current_value() * 2) / x_step,
             (self.ini_data_elements["ellipse half y length"].get_current_value() * 2) / y_step
         )
+
+    def draw_static_source(self, plot: HeatmapPlotBuilder):
+        x = self.static.ini_data_elements["x"].get_current_value()
+        n = self.static.ini_data_elements["N1"].get_current_value()
+        x_arr = list(range(x - int(n / 2), x + int(n / 2) + 1))
+        y = self.static.ini_data_elements["y"].get_current_value()
+        m = self.static.ini_data_elements["M1"].get_current_value()
+        y_arr = list(range(y - int(m / 2), y + int(m / 2) + 1))
+        z = self.static.result
+        levels = self.static.isoline_levels
+        plot.draw_contour(x_arr, y_arr, z, levels)
 
     def plot_marigrams(self):
         x = []

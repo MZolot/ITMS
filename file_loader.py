@@ -13,10 +13,11 @@ class FileLoader(QObject):
 
     def run(self):
         for f in self.files_to_load:
-            print("Loading  " + f)
-            res = np.loadtxt(f)
+            print(">> Loading " + f)
+            res = np.genfromtxt(f, filling_values=0.0)
             self.loading_results[f] = res
             # self.progress.emit(i + 1)
+        print(">> File loader emit")
         self.finished.emit()
 
     def get_results(self):

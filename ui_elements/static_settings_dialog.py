@@ -28,6 +28,13 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
                             self.parameters_to_menu["fault"]]
         calculation_parameters = [self.parameters[p] for p in
                                   self.parameters_to_menu["calculation"]]
+        coordinates_parameters = [self.parameters[p] for p in
+                                  self.parameters_to_menu["coordinates"]]
+
+        coordinates_label = QtWidgets.QLabel("Coordinates parameters")
+        coordinates_container = QtWidgets.QWidget()
+        coordinates_container.setContentsMargins(0, 0, 0, 0)
+        coordinates_container.setLayout(self.__layout_parameters(coordinates_parameters))
 
         fault_label = QtWidgets.QLabel("Fault parameters")
         fault_container = QtWidgets.QWidget()
@@ -43,13 +50,15 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
         line.setFrameShadow(QtWidgets.QFrame.Sunken)
 
         parameters_layout = QtWidgets.QVBoxLayout()
+        parameters_layout.addWidget(coordinates_label)
+        parameters_layout.addWidget(coordinates_container)
         parameters_layout.addWidget(fault_label)
         parameters_layout.addWidget(fault_container)
         parameters_layout.addWidget(line)
         parameters_layout.addWidget(calculation_container)
         self.parameters_widget.setLayout(parameters_layout)
 
-        self.scroll_area.setMinimumHeight(int(fault_container.height() / 1.4))
+        self.scroll_area.setMinimumHeight(int((fault_container.height())))
 
     def __layout_parameters(self, parameters):
         layout = QtWidgets.QVBoxLayout()

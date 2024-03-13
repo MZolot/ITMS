@@ -9,9 +9,7 @@ class SubprogramInterface:
     def __init__(self, subprogram_directory, subprogram_file_names):
         self.working_directory = subprogram_directory
 
-        self.program_file_names = {}
-        for f in subprogram_file_names.keys():
-            self.program_file_names[f] = subprogram_directory + "\\" + subprogram_file_names[f]
+        self.program_file_names = self.add_directory_to_file_names(subprogram_directory, subprogram_file_names)
 
         self.ini_data_elements: dict[str, DataEntry] = {}
         self.input_menu_to_elements: dict[str, str] = {}
@@ -43,22 +41,10 @@ class SubprogramInterface:
                                                                     element["default_value"], element["unit"],
                                                                     element["is_float"])
 
-    def save_parameters(self):
-        pass
-
-    def start_subprogram(self):
-        pass
+    def add_directory_to_file_names(self, directory, file_names):
+        program_file_names = {}
+        for f in file_names.keys():
+            program_file_names[f] = directory + "\\" + file_names[f]
+        return program_file_names
 
     # TODO: disable all actions while subprogram is working
-
-    def show_waiting_screen(self):
-        pass
-
-    def parse_parameters(self):
-        pass
-
-    def load_results(self):
-        pass
-
-    def visualise_results(self):
-        pass
