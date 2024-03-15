@@ -36,7 +36,6 @@
     <addaction name="menu_bottom_profile"/>
     <addaction name="separator"/>
     <addaction name="action_size"/>
-    <addaction name="action_steps"/>
     <addaction name="separator"/>
     <addaction name="action_show_area"/>
    </widget>
@@ -44,7 +43,16 @@
     <property name="title">
      <string>Source</string>
     </property>
-    <addaction name="action_source_parameters"/>
+    <widget class="QMenu" name="menu_new_source">
+     <property name="title">
+      <string>New tsunami source...</string>
+     </property>
+     <addaction name="action_elliptical_source"/>
+     <addaction name="action_static_source"/>
+    </widget>
+    <addaction name="menu_new_source"/>
+    <addaction name="separator"/>
+    <addaction name="action_show_static"/>
    </widget>
    <widget class="QMenu" name="menu_marigrams">
     <property name="title">
@@ -65,11 +73,8 @@
     </property>
     <addaction name="action_calculation_parameters"/>
     <addaction name="action_calculate_most"/>
-    <addaction name="action_calculate_most_static"/>
     <addaction name="separator"/>
     <addaction name="action_load_existing_results"/>
-    <addaction name="separator"/>
-    <addaction name="action_static"/>
    </widget>
    <widget class="QMenu" name="menu_visualisation">
     <property name="title">
@@ -116,7 +121,7 @@
   </action>
   <action name="action_calculate_most">
    <property name="text">
-    <string>Run MOST with elliptic source</string>
+    <string>Run and plot MOST</string>
    </property>
   </action>
   <action name="action_heatmap">
@@ -153,7 +158,7 @@
   </action>
   <action name="action_calculation_parameters">
    <property name="text">
-    <string>Change calculation parameters...</string>
+    <string>Calculation parameters...</string>
    </property>
   </action>
   <action name="actionArea">
@@ -245,6 +250,24 @@
    </property>
    <property name="text">
     <string>Run MOST with STATIC source</string>
+   </property>
+  </action>
+  <action name="action_elliptical_source">
+   <property name="text">
+    <string>Elliptical...</string>
+   </property>
+  </action>
+  <action name="action_static_source">
+   <property name="text">
+    <string>STATIC...</string>
+   </property>
+  </action>
+  <action name="action_show_static">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Show STATIC source</string>
    </property>
   </action>
  </widget>

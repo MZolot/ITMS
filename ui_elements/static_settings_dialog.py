@@ -6,10 +6,10 @@ from PyQt5 import QtWidgets
 
 
 class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
-    def __init__(self, parameters: dict[str, DataEntry], parameters_to_menu_section, calculate_callback):
+    def __init__(self, parameters: dict[str, DataEntry], parameters_to_menu_section, calculate_callbacks: list):
         self.parameters = parameters
         self.parameters_to_menu = parameters_to_menu_section
-        self.calculate_callback = calculate_callback
+        self.calculate_callbacks = calculate_callbacks
 
         super().__init__()
         self.setupUi(self)
@@ -103,7 +103,9 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
             if new_value != "":
                 new_value_float = float(self.line_edits[i].text())
                 self.parameters[i].set_current_value(new_value_float)
-        self.calculate_callback()
+
+        for callback in self.calculate_callbacks:
+            callback()
         self.close()
 
     def default_button_pushed(self):

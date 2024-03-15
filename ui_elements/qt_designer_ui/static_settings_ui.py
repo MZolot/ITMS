@@ -61,7 +61,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        Dialog.setWindowTitle(_translate("Dialog", "STATIC parameters"))
         self.push_button_default.setText(_translate("Dialog", "Default"))
         self.push_button_calculate.setText(_translate("Dialog", "Calculate"))
         self.push_button_close.setText(_translate("Dialog", "Close"))

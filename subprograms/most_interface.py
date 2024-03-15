@@ -62,8 +62,8 @@ class MOSTInterface(SubprogramInterface):
         self.input_menu_to_elements = {
             "area": ["x-size", "y-size", "x-step", "y-step", "lowest depth"],
             "size": ["x-size", "y-size", "x-step", "y-step"],
-            "source": ["max elevation at source", "ellipse half x length", "ellipse half y length",
-                       "ellipse center x location", "ellipse center y location", "lowest depth"],
+            "source": ["max elevation", "ellipse half x length", "ellipse half y length",
+                       "center x", "center y", "lowest depth"],
             "calculation": ["time step", "number of time steps", "number of steps between surface output"]
         }
 
@@ -86,18 +86,28 @@ class MOSTInterface(SubprogramInterface):
 
         ini_data_file.close()
 
-    def start_subprogram(self, use_static=False):
+    def set_source_to_ellipse(self):
+        print(">> Set elliptical source")
+        self.elliptical_source = True
+        self.current_directory = self.working_directory
+        self.current_program_file_names = self.program_file_names
+        self.ini_data_elements["max elevation"].reset_value()
+
+    def set_source_to_static(self):
+        print(">> Set STATIC source")
+        self.elliptical_source = False
+        self.current_directory = self.working_directory_with_static
+        self.current_program_file_names = self.program_with_static_file_names
+        self.ini_data_elements["center x"].set_current_value(self.static.ini_data_elements["x"].get_current_value())
+        self.ini_data_elements["center y"].set_current_value(self.static.ini_data_elements["y"].get_current_value())
+        self.ini_data_elements["max elevation"].set_current_value(0)
+
+    def start_subprogram(self):
         # TODO: это должно работать, только если программа запущена в первый раз, или если данные изменились
-        if use_static:
+        if not self.elliptical_source:
             print(">> Starting MOST with STATIC source")
-            self.elliptical_source = False
-            self.current_directory = self.working_directory_with_static
-            self.current_program_file_names = self.program_with_static_file_names
         else:
             print(">> Starting MOST with elliptical source")
-            self.elliptical_source = True
-            self.current_directory = self.working_directory
-            self.current_program_file_names = self.program_file_names
 
         self.save_parameters()
         self.show_calculation_screen_callback()
@@ -184,11 +194,12 @@ class MOSTInterface(SubprogramInterface):
         if self.elliptical_source:
             self.draw_elliptical_source(plot)
         else:
-            self.draw_static_source(plot)
+            pass
+            # self.draw_static_source(plot)
 
     def draw_elliptical_source(self, plot: HeatmapPlotBuilder):
-        x = self.ini_data_elements["ellipse center x location"].get_current_value()
-        y = self.ini_data_elements["ellipse center y location"].get_current_value()
+        x = self.ini_data_elements["center x"].get_current_value()
+        y = self.ini_data_elements["center y"].get_current_value()
         x_step = self.ini_data_elements["x-step"].get_current_value()
         y_step = self.ini_data_elements["y-step"].get_current_value()
         plot.draw_elliptical_source(
@@ -198,11 +209,13 @@ class MOSTInterface(SubprogramInterface):
         )
 
     def draw_static_source(self, plot: HeatmapPlotBuilder):
+        print("M1")
+        print(self.static.ini_data_elements["M1"].get_current_value())
         x = self.static.ini_data_elements["x"].get_current_value()
-        n = self.static.ini_data_elements["N1"].get_current_value()
+        n = int(self.static.ini_data_elements["N1"].get_current_value())
         x_arr = list(range(x - int(n / 2), x + int(n / 2) + 1))
         y = self.static.ini_data_elements["y"].get_current_value()
-        m = self.static.ini_data_elements["M1"].get_current_value()
+        m = int(self.static.ini_data_elements["M1"].get_current_value())
         y_arr = list(range(y - int(m / 2), y + int(m / 2) + 1))
         z = self.static.result
         levels = self.static.isoline_levels

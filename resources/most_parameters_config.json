@@ -28,7 +28,7 @@
         "default_value": 400
     },
     {
-        "name": "max elevation at source",
+        "name": "max elevation",
         "label_text": "Max elevation at source",
         "unit": "m",
         "is_float": true,
@@ -49,14 +49,14 @@
         "default_value": 25000
     },
     {
-        "name": "ellipse center x location",
+        "name": "center x",
         "label_text": "Ellipse center x location",
         "unit": "",
         "is_float": false,
         "default_value": 750
     },
     {
-        "name": "ellipse center y location",
+        "name": "center y",
         "label_text": "Ellipse center y location",
         "unit": "",
         "is_float": false,

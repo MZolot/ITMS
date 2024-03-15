@@ -22,5 +22,8 @@ class DataEntry:
         else:
             self.current_value = int(value)
 
+    def reset_value(self):
+        self.current_value = self.default_value
+
     def __str__(self):
         return self.label_text + " " + str(self.get_current_value()) + " " + self.unit

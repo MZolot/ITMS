@@ -17,7 +17,7 @@ class FileLoader(QObject):
             res = np.genfromtxt(f, filling_values=0.0)
             self.loading_results[f] = res
             # self.progress.emit(i + 1)
-        print(">> File loader emit")
+        print(">> Loading finished")
         self.finished.emit()
 
     def get_results(self):

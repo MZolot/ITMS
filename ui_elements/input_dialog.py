@@ -62,14 +62,15 @@ class InputMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
         self.close()
 
 
-class SourceMenuDialog(InputMenuDialog):
-    def __init__(self, data_elements, title, ok_pushed_callback):
+class InputMenuDialogWithCallbacks(InputMenuDialog):
+    def __init__(self, data_elements, title, ok_pushed_callbacks: list):
         super().__init__(data_elements, title)
-        self.ok_pushed = ok_pushed_callback
+        self.ok_pushed = ok_pushed_callbacks
 
     def ok_button_pushed(self):
         super().ok_button_pushed()
-        self.ok_pushed()
+        for callback in self.ok_pushed:
+            callback()
 
 
 class CalculationMenuDialog(InputMenuDialog):
