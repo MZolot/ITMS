@@ -328,8 +328,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     def open_static_settings_dialog(self):
         dialog = StaticSettingsDialog(self.STATIC_subprogram.ini_data_elements,
                                       self.STATIC_subprogram.input_menu_to_elements,
-                                      [self.STATIC_subprogram.start_subprogram,
-                                       self.MOST_subprogram.set_source_to_static])
+                                      [self.MOST_subprogram.set_source_to_static,
+                                       self.STATIC_subprogram.start_subprogram])
         dialog.exec()
 
     def show_static_calculation_screen(self):

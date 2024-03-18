@@ -74,6 +74,13 @@ class MOSTInterface(SubprogramInterface):
     def save_parameters(self):
         ini_data_file = open(self.current_program_file_names["initial"], "w")
 
+        if not self.elliptical_source:
+            print(">> Saving MOST parameters: STATIC source")
+            self.ini_data_elements["center x"].set_current_value(self.static.ini_data_elements["x"].get_current_value())
+            self.ini_data_elements["center y"].set_current_value(self.static.ini_data_elements["y"].get_current_value())
+            self.ini_data_elements["max elevation"].set_current_value(0)
+
+        print(">> Saving MOST parameters")
         for i in self.ini_data_elements.values():
             input_data = str(i.get_current_value()) + "  --  " + i.label_text + '\n'
             ini_data_file.write(input_data)
@@ -83,6 +90,7 @@ class MOSTInterface(SubprogramInterface):
             static_y = self.static.ini_data_elements["M1"].get_current_value()
             input_data = str(static_x) + "  --  statik X size\n" + str(static_y) + "  --  statik Y size\n"
             ini_data_file.write(input_data)
+            self.print_scaled_static()
 
         ini_data_file.close()
 
@@ -102,15 +110,44 @@ class MOSTInterface(SubprogramInterface):
         self.ini_data_elements["center y"].set_current_value(self.static.ini_data_elements["y"].get_current_value())
         self.ini_data_elements["max elevation"].set_current_value(0)
 
+    def print_scaled_static(self):
+        # for p in self.static.ini_data_elements.keys():
+        #     print(p + " - " + str(self.static.ini_data_elements[p]))
+        static_unscaled = np.transpose(self.static.result)
+        static_grid_x_step = self.static.ini_data_elements["Dx"].get_current_value()
+        static_grid_y_step = self.static.ini_data_elements["Dy"].get_current_value()
+        n1 = self.static.ini_data_elements["N1"].get_current_value()
+        m1 = self.static.ini_data_elements["M1"].get_current_value()
+        most_grid_x_step = self.ini_data_elements["x-step"].get_current_value() / 1000
+        most_grid_y_step = self.ini_data_elements["y-step"].get_current_value() / 1000
+
+        x_multiplier = static_grid_x_step / most_grid_x_step
+        y_multiplier = static_grid_y_step / most_grid_y_step
+        x_step = 0
+        y_step = 0
+
+        f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
+        for j in range(0, m1):
+            while y_step <= y_multiplier:
+                for i in range(0, n1):
+                    while x_step <= x_multiplier:
+                        f_out.write(format(static_unscaled[i][j], '.3f') + " ")
+                        x_step += 1
+                    x_step = 0
+                f_out.write("\n")
+                y_step += 1
+            y_step = 0
+        f_out.close()
+
     def start_subprogram(self):
         # TODO: это должно работать, только если программа запущена в первый раз, или если данные изменились
+        self.save_parameters()
+        self.show_calculation_screen_callback()
+
         if not self.elliptical_source:
             print(">> Starting MOST with STATIC source")
         else:
             print(">> Starting MOST with elliptical source")
-
-        self.save_parameters()
-        self.show_calculation_screen_callback()
 
         commands = self.current_program_file_names["exe"]
 
@@ -119,6 +156,8 @@ class MOSTInterface(SubprogramInterface):
         self.process.readyReadStandardOutput.connect(self.update_progress)
         self.process.finished.connect(self.load_results)
         self.process.start(commands)
+
+        print(f">> Started {commands}")
 
     def update_progress(self):
         data = self.process.readAllStandardOutput()

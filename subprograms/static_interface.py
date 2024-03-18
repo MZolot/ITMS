@@ -84,6 +84,7 @@ class STATICInterface(SubprogramInterface):
 
         n1 = self.ini_data_elements["N1"].get_current_value()
         m1 = self.ini_data_elements["M1"].get_current_value()
+
         self.result = np.zeros((n1, m1), float)
         f = open(self.program_file_names["result"], "rb")
         for j in range(0, m1):
@@ -92,13 +93,13 @@ class STATICInterface(SubprogramInterface):
         f.close()
         self.result = np.flipud(self.result)
 
-        f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
-        transposed = np.transpose(self.result)
-        for j in range(0, m1):
-            for i in range(0, n1):
-                f_out.write(format(transposed[i][j], '.3f') + " ")
-            f_out.write("\n")
-        f_out.close()
+        # f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
+        # transposed = np.transpose(self.result)
+        # for j in range(0, m1):
+        #     for i in range(0, n1):
+        #         f_out.write(format(transposed[i][j], '.3f') + " ")
+        #     f_out.write("\n")
+        # f_out.close()
 
         self.visualise_results()
 
