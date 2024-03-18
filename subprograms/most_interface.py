@@ -114,29 +114,36 @@ class MOSTInterface(SubprogramInterface):
         # for p in self.static.ini_data_elements.keys():
         #     print(p + " - " + str(self.static.ini_data_elements[p]))
         static_unscaled = np.transpose(self.static.result)
-        static_grid_x_step = self.static.ini_data_elements["Dx"].get_current_value()
-        static_grid_y_step = self.static.ini_data_elements["Dy"].get_current_value()
+        # static_grid_x_step = self.static.ini_data_elements["Dx"].get_current_value()
+        # static_grid_y_step = self.static.ini_data_elements["Dy"].get_current_value()
         n1 = self.static.ini_data_elements["N1"].get_current_value()
         m1 = self.static.ini_data_elements["M1"].get_current_value()
-        most_grid_x_step = self.ini_data_elements["x-step"].get_current_value() / 1000
-        most_grid_y_step = self.ini_data_elements["y-step"].get_current_value() / 1000
-
-        x_multiplier = static_grid_x_step / most_grid_x_step
-        y_multiplier = static_grid_y_step / most_grid_y_step
-        x_step = 0
-        y_step = 0
+        # most_grid_x_step = self.ini_data_elements["x-step"].get_current_value() / 1000
+        # most_grid_y_step = self.ini_data_elements["y-step"].get_current_value() / 1000
+        #
+        # x_multiplier = static_grid_x_step / most_grid_x_step
+        # y_multiplier = static_grid_y_step / most_grid_y_step
+        # x_step = 0
+        # y_step = 0
+        #
+        # f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
+        # for j in range(0, m1):
+        #     while y_step <= y_multiplier:
+        #         for i in range(0, n1):
+        #             while x_step <= x_multiplier:
+        #                 f_out.write(format(static_unscaled[i][j], '.3f') + " ")
+        #                 x_step += 1
+        #             x_step = 0
+        #         f_out.write("\n")
+        #         y_step += 1
+        #     y_step = 0
+        # f_out.close()
 
         f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
         for j in range(0, m1):
-            while y_step <= y_multiplier:
-                for i in range(0, n1):
-                    while x_step <= x_multiplier:
-                        f_out.write(format(static_unscaled[i][j], '.3f') + " ")
-                        x_step += 1
-                    x_step = 0
-                f_out.write("\n")
-                y_step += 1
-            y_step = 0
+            for i in range(0, n1):
+                f_out.write(format(static_unscaled[i][j], '.3f') + " ")
+            f_out.write("\n")
         f_out.close()
 
     def start_subprogram(self):
@@ -233,8 +240,8 @@ class MOSTInterface(SubprogramInterface):
         if self.elliptical_source:
             self.draw_elliptical_source(plot)
         else:
-            pass
-            # self.draw_static_source(plot)
+            # pass
+            self.draw_static_source(plot)
 
     def draw_elliptical_source(self, plot: HeatmapPlotBuilder):
         x = self.ini_data_elements["center x"].get_current_value()
@@ -248,12 +255,10 @@ class MOSTInterface(SubprogramInterface):
         )
 
     def draw_static_source(self, plot: HeatmapPlotBuilder):
-        print("M1")
-        print(self.static.ini_data_elements["M1"].get_current_value())
-        x = self.static.ini_data_elements["x"].get_current_value()
+        x = int(self.static.ini_data_elements["x"].get_current_value())
         n = int(self.static.ini_data_elements["N1"].get_current_value())
         x_arr = list(range(x - int(n / 2), x + int(n / 2) + 1))
-        y = self.static.ini_data_elements["y"].get_current_value()
+        y = int(self.static.ini_data_elements["y"].get_current_value())
         m = int(self.static.ini_data_elements["M1"].get_current_value())
         y_arr = list(range(y - int(m / 2), y + int(m / 2) + 1))
         z = self.static.result
