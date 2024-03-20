@@ -37,6 +37,11 @@ class STATICInterface(SubprogramInterface):
         self.isoline_levels = [-0.5, -0.4, -0.3, -0.2, -0.1, -0.05, 0.0, 0.01, 0.05, 0.1, 0.4]
 
         self.result = None
+        self.v0: float = 0
+        self.ve: float = 0
+        self.ets: float = 0
+        self.u_min: float = 0
+        self.u_max: float = 0
 
     def load_initial_data(self, config_file_name):
         super().load_initial_data(config_file_name)
@@ -90,8 +95,15 @@ class STATICInterface(SubprogramInterface):
         for j in range(0, m1):
             for i in range(0, n1):
                 self.result[i][j] = struct.unpack('d', f.read(8))[0]
-        f.close()
         self.result = np.flipud(self.result)
+
+        self.v0 = struct.unpack('d', f.read(8))[0]
+        self.ve = struct.unpack('d', f.read(8))[0]
+        self.ets = struct.unpack('d', f.read(8))[0]
+        self.u_min = struct.unpack('d', f.read(8))[0]
+        self.u_max = struct.unpack('d', f.read(8))[0]
+
+        f.close()
 
         # f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
         # transposed = np.transpose(self.result)

@@ -1,4 +1,5 @@
 import ui_elements.qt_designer_ui.static_settings_ui as settings_ui
+import ui_elements.qt_designer_ui.static_results_widget_ui as results_widget_ui
 import ui_elements.qt_designer_ui.error_dialog as error_ui
 from ui_elements.collapsible_box import CollapsibleBox
 from data_entry import DataEntry
@@ -106,7 +107,7 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
 
         for callback in self.calculate_callbacks:
             callback()
-        self.close()
+        # self.close()
 
     def default_button_pushed(self):
         for parameter in self.parameters.values():
@@ -114,6 +115,22 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
 
             line_edit = self.line_edits[parameter.name]
             line_edit.setPlaceholderText(str(parameter.get_current_value()))
+
+    def add_result_values(self, v0, ve, ets, u_min, u_max):
+        widget = ResultsWidget(v0, ve, ets, u_min, u_max)
+        self.verticalLayout.insertWidget(1, widget)
+
+
+class ResultsWidget(QtWidgets.QWidget, results_widget_ui.Ui_Form):
+    def __init__(self, v0, ve, ets, u_min, u_max):
+        super().__init__()
+        self.setupUi(self)
+
+        self.label_v0_val.setText(format(v0, '.3e') + " km3")
+        self.label_ve_val.setText(format(ve, '.3e') + " km3")
+        self.label_ets_val.setText(format(ets, '.3e'))
+        self.label_umin_val.setText(format(u_min, '.3e') + " m")
+        self.label_umax_val.setText(format(u_max, '.3e') + " m")
 
 
 class ErrorDialog(QtWidgets.QDialog, error_ui.Ui_Dialog):

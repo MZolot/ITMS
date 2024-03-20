@@ -13,7 +13,7 @@ from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            HeatmapContourPlotBuilder,
                                            BarPlotBuilder)
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 
 import numpy as np
 
@@ -87,6 +87,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.plot_widget = PlotWidget({"bottom": self.MOST_subprogram.bottom_plot})
 
         # self.MOST_subprogram.draw_elliptical_source()
+
+        self.static_dialog = None
 
         self.wave_profile_end_points = []
         self.wave_profile_data = None
@@ -331,13 +333,16 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         return data
 
     def open_static_settings_dialog(self):
-        dialog = StaticSettingsDialog(self.STATIC_subprogram.ini_data_elements,
-                                      self.STATIC_subprogram.input_menu_to_elements,
-                                      [
-                                          # self.MOST_subprogram.set_source_to_static,
-                                          self.STATIC_subprogram.start_subprogram
-                                      ])
-        dialog.exec()
+        self.static_dialog = StaticSettingsDialog(self.STATIC_subprogram.ini_data_elements,
+                                                  self.STATIC_subprogram.input_menu_to_elements,
+                                                  [
+                                                      # self.MOST_subprogram.set_source_to_static,
+                                                      self.STATIC_subprogram.start_subprogram
+                                                  ])
+
+        self.static_dialog.move(self.pos() + self.centralWidget().pos() * 5)
+        self.static_dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
+        self.static_dialog.show()
 
     def show_static_calculation_screen(self):
         calculation_screen = self.STATIC_subprogram.get_calculation_screen()
@@ -351,6 +356,12 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.plot_widget.add_plot("bottom", self.bottom_plot)
         self.plot_widget.add_plot("static", self.STATIC_subprogram.heatmap_plot)
         # self.plot_widget = PlotWidget({"bottom": self.MOST_subprogram.bottom_plot})
+
+        self.static_dialog.add_result_values(self.STATIC_subprogram.v0 / 1000000000,
+                                             self.STATIC_subprogram.ve / 1000000000,
+                                             self.STATIC_subprogram.ets,
+                                             self.STATIC_subprogram.u_min,
+                                             self.STATIC_subprogram.u_max)
 
         self.action_heatmap.setEnabled(True)
         self.action_heatmap_with_contour.setEnabled(True)
@@ -400,5 +411,5 @@ class ErrorDialog(QtWidgets.QDialog, error_ui.Ui_Dialog):
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     window = MOSTApp()
-    window.show()
+    window.showMaximized()
     app.exec_()
