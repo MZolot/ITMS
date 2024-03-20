@@ -31,5 +31,5 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Value error!"))
+        Dialog.setWindowTitle(_translate("Dialog", "ERROR"))
         self.push_button.setText(_translate("Dialog", "OK"))

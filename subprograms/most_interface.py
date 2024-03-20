@@ -76,6 +76,13 @@ class MOSTInterface(SubprogramInterface):
         menu = FileSelectionMenuDialog(self.program_file_names, self.load_results)
         menu.exec()
 
+    def check_parameters_correctness(self):
+        m = self.static.ini_data_elements["M1"].get_current_value()
+        n = self.static.ini_data_elements["N1"].get_current_value()
+        m_corr = (m * self.x_multiplier) <= self.ini_data_elements["x-size"].get_current_value()
+        n_corr = (n * self.y_multiplier) <= self.ini_data_elements["y-size"].get_current_value()
+        return m_corr & n_corr
+
     def save_parameters(self):
         ini_data_file = open(self.current_program_file_names["initial"], "w")
 
@@ -154,8 +161,11 @@ class MOSTInterface(SubprogramInterface):
         #     f_out.write("\n")
         # f_out.close()
 
-    def start_subprogram(self):
+    def start_subprogram(self, error_callback):
         # TODO: это должно работать, только если программа запущена в первый раз, или если данные изменились
+        if not self.check_parameters_correctness():
+            error_callback()
+            return
         self.show_calculation_screen_callback()
         self.save_parameters()
 
@@ -270,22 +280,15 @@ class MOSTInterface(SubprogramInterface):
 
     def draw_static_source(self, plot: HeatmapPlotBuilder):
         z = np.loadtxt("subprograms\\MOST_with_STATIC\\static.txt")
-        print(np.shape(z))
 
         x = int(self.static.ini_data_elements["x"].get_current_value())
         m = int(self.static.ini_data_elements["M1"].get_current_value() * self.x_multiplier)
-        # m = np.shape(self.scaled_static)[1]
         start_x = x - int(m / 2)
         x_arr = list(range(start_x, start_x + m))
-        print(f"{m}, {start_x}, {start_x + m}")
         y = int(self.static.ini_data_elements["y"].get_current_value())
         n = int(self.static.ini_data_elements["N1"].get_current_value() * self.y_multiplier)
-        # n = np.shape(self.scaled_static)[0]
         start_y = y - int(n / 2)
         y_arr = list(range(start_y, start_y + n))
-        # z = self.scaled_static
-        print(len(x_arr))
-        print(len(y_arr))
         levels = self.static.isoline_levels
         plot.draw_contour(x_arr, y_arr, z, levels)
 

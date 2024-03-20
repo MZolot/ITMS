@@ -108,7 +108,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             lambda: self.open_most_input_menu(self.MOST_subprogram.input_menu_to_elements["calculation"],
                                               "Calculation parameters", "calculation"))
         self.action_calculate_most.triggered.connect(
-            lambda: self.MOST_subprogram.start_subprogram())
+            lambda: self.MOST_subprogram.start_subprogram(self.show_error_message))
 
         self.action_show_area.triggered.connect(
             lambda: self.plot_widget.set_plot("bottom"))
@@ -375,6 +375,26 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.plot_widget.set_plot("heatmap")
         self.setCentralWidget(self.plot_widget.get_widget())
+
+    def show_error_message(self):
+        print(">> STATIC size error")
+        error_dialog = ErrorDialog()
+        error_dialog.exec()
+
+
+class ErrorDialog(QtWidgets.QDialog, error_ui.Ui_Dialog):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+
+        line = "Incorrect values for STATIC source size or area size.\nSTATIC source is bigger then the area."
+        self.label.setWordWrap(True)
+        self.label.setText(line)
+
+        self.push_button.clicked.connect(self.ok_button_pushed)
+
+    def ok_button_pushed(self):
+        self.close()
 
 
 if __name__ == '__main__':
