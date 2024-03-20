@@ -44,6 +44,7 @@ class MOSTInterface(SubprogramInterface):
 
         self.isoline_levels = [0.005, 0.01, 0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1]
 
+        self.steps_calculated: int = 0
         self.height = None
         self.max_height = None
 
@@ -52,9 +53,12 @@ class MOSTInterface(SubprogramInterface):
                                                                                   subprogram_file_names)
         self.static: STATICInterface = static
 
-        self.elliptical_source = True
+        self.elliptical_source: bool = True
         self.current_directory = self.working_directory
         self.current_program_file_names = self.program_file_names
+        self.scaled_static = None
+        self.x_multiplier: int = 1
+        self.y_multiplier: int = 1
 
     def load_initial_data(self, config_file_name):
         super().load_initial_data(config_file_name)
@@ -75,7 +79,6 @@ class MOSTInterface(SubprogramInterface):
         ini_data_file = open(self.current_program_file_names["initial"], "w")
 
         if not self.elliptical_source:
-            print(">> Saving MOST parameters: STATIC source")
             self.ini_data_elements["center x"].set_current_value(self.static.ini_data_elements["x"].get_current_value())
             self.ini_data_elements["center y"].set_current_value(self.static.ini_data_elements["y"].get_current_value())
             self.ini_data_elements["max elevation"].set_current_value(0)
@@ -86,11 +89,12 @@ class MOSTInterface(SubprogramInterface):
             ini_data_file.write(input_data)
 
         if not self.elliptical_source:
-            static_x = self.static.ini_data_elements["N1"].get_current_value()
-            static_y = self.static.ini_data_elements["M1"].get_current_value()
+            print(">> Saving MOST parameters: STATIC source")
+            self.print_scaled_static()
+            static_x = self.static.ini_data_elements["M1"].get_current_value() * self.x_multiplier
+            static_y = self.static.ini_data_elements["N1"].get_current_value() * self.y_multiplier
             input_data = str(static_x) + "  --  statik X size\n" + str(static_y) + "  --  statik Y size\n"
             ini_data_file.write(input_data)
-            self.print_scaled_static()
 
         ini_data_file.close()
 
@@ -113,43 +117,45 @@ class MOSTInterface(SubprogramInterface):
     def print_scaled_static(self):
         # for p in self.static.ini_data_elements.keys():
         #     print(p + " - " + str(self.static.ini_data_elements[p]))
-        static_unscaled = np.transpose(self.static.result)
-        # static_grid_x_step = self.static.ini_data_elements["Dx"].get_current_value()
-        # static_grid_y_step = self.static.ini_data_elements["Dy"].get_current_value()
-        n1 = self.static.ini_data_elements["N1"].get_current_value()
-        m1 = self.static.ini_data_elements["M1"].get_current_value()
-        # most_grid_x_step = self.ini_data_elements["x-step"].get_current_value() / 1000
-        # most_grid_y_step = self.ini_data_elements["y-step"].get_current_value() / 1000
-        #
-        # x_multiplier = static_grid_x_step / most_grid_x_step
-        # y_multiplier = static_grid_y_step / most_grid_y_step
-        # x_step = 0
-        # y_step = 0
-        #
-        # f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
-        # for j in range(0, m1):
-        #     while y_step <= y_multiplier:
-        #         for i in range(0, n1):
-        #             while x_step <= x_multiplier:
-        #                 f_out.write(format(static_unscaled[i][j], '.3f') + " ")
-        #                 x_step += 1
-        #             x_step = 0
-        #         f_out.write("\n")
-        #         y_step += 1
-        #     y_step = 0
-        # f_out.close()
+        unscaled_static = np.transpose(self.static.result)
+        static_grid_x_step = self.static.ini_data_elements["Dx"].get_current_value()
+        static_grid_y_step = self.static.ini_data_elements["Dy"].get_current_value()
+        n = self.static.ini_data_elements["N1"].get_current_value()
+        m = self.static.ini_data_elements["M1"].get_current_value()
+        most_grid_x_step = self.ini_data_elements["x-step"].get_current_value() / 1000
+        most_grid_y_step = self.ini_data_elements["y-step"].get_current_value() / 1000
 
+        self.x_multiplier = static_grid_x_step / most_grid_x_step
+        self.y_multiplier = static_grid_y_step / most_grid_y_step
+        x_step = 0
+        y_step = 0
+
+        self.scaled_static = np.zeros((m, n), float)
         f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
-        for j in range(0, m1):
-            for i in range(0, n1):
-                f_out.write(format(static_unscaled[i][j], '.3f') + " ")
-            f_out.write("\n")
+        for j in range(0, n):
+            while y_step <= self.y_multiplier:
+                for i in range(0, m):
+                    while x_step <= self.x_multiplier:
+                        f_out.write(format(unscaled_static[i][j], '.3f') + " ")
+                        self.scaled_static[i + x_step][j + y_step] = unscaled_static[i][j]
+                        x_step += 1
+                    x_step = 0
+                f_out.write("\n")
+                y_step += 1
+            y_step = 0
         f_out.close()
+
+        # f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
+        # for j in range(0, n):
+        #     for i in range(0, m):
+        #         f_out.write(format(unscaled_static[i][j], '.3f') + " ")
+        #     f_out.write("\n")
+        # f_out.close()
 
     def start_subprogram(self):
         # TODO: это должно работать, только если программа запущена в первый раз, или если данные изменились
-        self.save_parameters()
         self.show_calculation_screen_callback()
+        self.save_parameters()
 
         if not self.elliptical_source:
             print(">> Starting MOST with STATIC source")
@@ -164,13 +170,14 @@ class MOSTInterface(SubprogramInterface):
         self.process.finished.connect(self.load_results)
         self.process.start(commands)
 
-        print(f">> Started {commands}")
+        print(f">> Started MOST ({commands})")
 
     def update_progress(self):
         data = self.process.readAllStandardOutput()
         stdout = bytes(data).decode("utf8").strip()
         if stdout != '':
-            self.calculation_screen.update_progress_bar(int(stdout))
+            self.steps_calculated = int(stdout)
+            self.calculation_screen.update_progress_bar(self.steps_calculated)
 
     def get_calculation_screen(self):
         steps = self.ini_data_elements["number of time steps"].get_current_value()
@@ -185,6 +192,11 @@ class MOSTInterface(SubprogramInterface):
             parameter.set_current_value(new_value)
 
     def load_results(self):
+        print(f">> MOST calculation finished ({self.steps_calculated} steps total)")
+        if self.steps_calculated < self.ini_data_elements["number of time steps"].get_current_value():
+            print(">> MOST SUBPROGRAM ERROR: only ", end='')
+            print(str(self.steps_calculated) + " steps calculated instead of ", end='')
+            print(str(self.ini_data_elements["number of time steps"].get_current_value()))
         # self.marigram_points = []
         self.show_loading_screen_callback()
 
@@ -256,12 +268,12 @@ class MOSTInterface(SubprogramInterface):
 
     def draw_static_source(self, plot: HeatmapPlotBuilder):
         x = int(self.static.ini_data_elements["x"].get_current_value())
-        n = int(self.static.ini_data_elements["N1"].get_current_value())
-        x_arr = list(range(x - int(n / 2), x + int(n / 2) + 1))
-        y = int(self.static.ini_data_elements["y"].get_current_value())
         m = int(self.static.ini_data_elements["M1"].get_current_value())
-        y_arr = list(range(y - int(m / 2), y + int(m / 2) + 1))
-        z = self.static.result
+        x_arr = list(range(x - int(m / 2), x + int(m / 2) + 1))
+        y = int(self.static.ini_data_elements["y"].get_current_value())
+        n = int(self.static.ini_data_elements["N1"].get_current_value())
+        y_arr = list(range(y - int(n / 2), y + int(n / 2) + 1))
+        z = self.scaled_static
         levels = self.static.isoline_levels
         plot.draw_contour(x_arr, y_arr, z, levels)
 

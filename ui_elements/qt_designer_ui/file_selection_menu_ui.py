@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(228, 238)
+        Dialog.resize(228, 258)
         self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.vertical_layout_initial = QtWidgets.QVBoxLayout()
@@ -88,7 +88,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        Dialog.setWindowTitle(_translate("Dialog", "Select MOST files"))
         self.label_initial.setText(_translate("Dialog", "Initial parameters:"))
         self.label_ini_data_file_name.setText(_translate("Dialog", "default_file_name"))
         self.push_button_initial.setText(_translate("Dialog", "Select file..."))

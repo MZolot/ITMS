@@ -99,20 +99,16 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def set_actions(self):
         self.action_size.triggered.connect(
-            lambda: self.open_most_input_menu(self.MOST_subprogram.input_menu_to_elements["size"], "Size parameters"))
-        # self.action_steps.triggered.connect(
-        #   lambda: self.open_most_input_menu(self.MOST_subprogram.input_menu_to_elements["steps"], "Steps parameters"))
+            lambda: self.open_most_input_menu(self.MOST_subprogram.input_menu_to_elements["size"],
+                                              "Size parameters", "size"))
         self.action_elliptical_source.triggered.connect(
             lambda: self.open_most_input_menu(self.MOST_subprogram.input_menu_to_elements["source"],
-                                              "Source parameters",
-                                              "source"))
+                                              "Elliptical source parameters", "source"))
         self.action_calculation_parameters.triggered.connect(
             lambda: self.open_most_input_menu(self.MOST_subprogram.input_menu_to_elements["calculation"],
                                               "Calculation parameters", "calculation"))
         self.action_calculate_most.triggered.connect(
             lambda: self.MOST_subprogram.start_subprogram())
-        # self.action_calculate_most_static.triggered.connect(
-        #     lambda: self.MOST_subprogram.start_subprogram(True))
 
         self.action_show_area.triggered.connect(
             lambda: self.plot_widget.set_plot("bottom"))
@@ -129,6 +125,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             lambda: self.open_isoline_settings_menu(self.STATIC_subprogram))
 
         self.action_static_source.triggered.connect(self.open_static_settings_dialog)
+        self.action_show_static.triggered.connect(
+            lambda: self.plot_widget.set_plot("static"))
 
     def open_most_input_menu(self, element_names, title, menu_type=""):
         elements = []
@@ -138,6 +136,9 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             menu = InputMenuDialogWithCallbacks(elements, title,
                                                 [self.MOST_subprogram.set_source_to_ellipse,
                                                  lambda: self.MOST_subprogram.draw_source(self.bottom_plot)])
+        elif menu_type == "size":
+            menu = InputMenuDialogWithCallbacks(elements, title,
+                                                [lambda: self.MOST_subprogram.draw_source(self.bottom_plot)])
         elif menu_type == "calculation":
             menu = CalculationMenuDialog(elements, title, self.MOST_subprogram.start_subprogram)
         else:
@@ -164,8 +165,12 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     # def parse_initial_data_file(self):  # TODO: change to work for static
     def show_most_result(self):
         self.plot_widget = self.MOST_subprogram.plot_widget
+        self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
         self.plot_widget.add_plot("bottom", self.bottom_plot)
         self.MOST_subprogram.draw_source(self.bottom_plot)
+
+        if self.STATIC_subprogram.calculated:
+            self.plot_widget.add_plot("static", self.STATIC_subprogram.heatmap_plot)
 
         self.action_heatmap.setEnabled(True)
         self.action_heatmap_with_contour.setEnabled(True)
@@ -338,7 +343,9 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def show_static_results(self):
         self.plot_widget = self.STATIC_subprogram.plot_widget
+        self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
         self.plot_widget.add_plot("bottom", self.bottom_plot)
+        self.plot_widget.add_plot("static", self.STATIC_subprogram.heatmap_plot)
         # self.plot_widget = PlotWidget({"bottom": self.MOST_subprogram.bottom_plot})
 
         self.action_heatmap.setEnabled(True)
@@ -348,6 +355,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         # self.action_draw_wave_profile.setEnabled(True)
 
         self.action_calculate_most_static.setEnabled(True)
+        self.action_show_static.setEnabled(True)
 
         self.action_heatmap.triggered.connect(
             lambda: self.plot_widget.set_plot("heatmap")

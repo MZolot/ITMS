@@ -65,14 +65,14 @@
         "label_text": "N1",
         "unit": "",
         "is_float": false,
-        "default_value": 101
+        "default_value": 61
     },
     {
         "name": "M1",
         "label_text": "M1",
         "unit": "",
         "is_float": false,
-        "default_value": 101
+        "default_value": 81
     },
     {
         "name": "Dx",

@@ -148,7 +148,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "ITRIS"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "ITMS"))
         self.menu_area.setTitle(_translate("MainWindow", "Area"))
         self.menu_bottom_profile.setTitle(_translate("MainWindow", "Bottom profile..."))
         self.menu_source.setTitle(_translate("MainWindow", "Source"))
