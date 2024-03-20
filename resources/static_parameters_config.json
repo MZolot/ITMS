@@ -16,14 +16,14 @@
         "label_text": "Length (km)",
         "unit": "",
         "is_float": true,
-        "default_value": 100
+        "default_value": 50
     },
     {
         "name": "W",
         "label_text": "Width (km)",
         "unit": "",
         "is_float": true,
-        "default_value": 40
+        "default_value": 20
     },
     {
         "name": "DE",

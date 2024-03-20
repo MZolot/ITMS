@@ -1,3 +1,5 @@
+import numpy as np
+
 from subprograms.subprogram_interface import SubprogramInterface
 from subprograms.static_interface import STATICInterface
 
@@ -56,7 +58,6 @@ class MOSTInterface(SubprogramInterface):
         self.elliptical_source: bool = True
         self.current_directory = self.working_directory
         self.current_program_file_names = self.program_file_names
-        self.scaled_static = None
         self.x_multiplier: int = 1
         self.y_multiplier: int = 1
 
@@ -114,6 +115,9 @@ class MOSTInterface(SubprogramInterface):
         self.ini_data_elements["center y"].set_current_value(self.static.ini_data_elements["y"].get_current_value())
         self.ini_data_elements["max elevation"].set_current_value(0)
 
+        if self.static.calculated:
+            self.print_scaled_static()
+
     def print_scaled_static(self):
         # for p in self.static.ini_data_elements.keys():
         #     print(p + " - " + str(self.static.ini_data_elements[p]))
@@ -130,14 +134,12 @@ class MOSTInterface(SubprogramInterface):
         x_step = 0
         y_step = 0
 
-        self.scaled_static = np.zeros((m, n), float)
         f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
         for j in range(0, n):
-            while y_step <= self.y_multiplier:
+            while y_step < self.y_multiplier:
                 for i in range(0, m):
-                    while x_step <= self.x_multiplier:
+                    while x_step < self.x_multiplier:
                         f_out.write(format(unscaled_static[i][j], '.3f') + " ")
-                        self.scaled_static[i + x_step][j + y_step] = unscaled_static[i][j]
                         x_step += 1
                     x_step = 0
                 f_out.write("\n")
@@ -267,13 +269,23 @@ class MOSTInterface(SubprogramInterface):
         )
 
     def draw_static_source(self, plot: HeatmapPlotBuilder):
+        z = np.loadtxt("subprograms\\MOST_with_STATIC\\static.txt")
+        print(np.shape(z))
+
         x = int(self.static.ini_data_elements["x"].get_current_value())
-        m = int(self.static.ini_data_elements["M1"].get_current_value())
-        x_arr = list(range(x - int(m / 2), x + int(m / 2) + 1))
+        m = int(self.static.ini_data_elements["M1"].get_current_value() * self.x_multiplier)
+        # m = np.shape(self.scaled_static)[1]
+        start_x = x - int(m / 2)
+        x_arr = list(range(start_x, start_x + m))
+        print(f"{m}, {start_x}, {start_x + m}")
         y = int(self.static.ini_data_elements["y"].get_current_value())
-        n = int(self.static.ini_data_elements["N1"].get_current_value())
-        y_arr = list(range(y - int(n / 2), y + int(n / 2) + 1))
-        z = self.scaled_static
+        n = int(self.static.ini_data_elements["N1"].get_current_value() * self.y_multiplier)
+        # n = np.shape(self.scaled_static)[0]
+        start_y = y - int(n / 2)
+        y_arr = list(range(start_y, start_y + n))
+        # z = self.scaled_static
+        print(len(x_arr))
+        print(len(y_arr))
         levels = self.static.isoline_levels
         plot.draw_contour(x_arr, y_arr, z, levels)
 
