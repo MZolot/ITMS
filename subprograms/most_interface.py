@@ -13,6 +13,7 @@ from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            BarPlotBuilder,
                                            MarigramsPlotBuilder)
 from PyQt5.QtCore import QProcess, QThread
+from datetime import datetime
 
 
 class MOSTInterface(SubprogramInterface):
@@ -182,7 +183,8 @@ class MOSTInterface(SubprogramInterface):
         self.process.finished.connect(self.load_results)
         self.process.start(commands)
 
-        print(f">> Started MOST ({commands})")
+        time = datetime.now().strftime("%H:%M:%S:%f")
+        print(f">> Started MOST ({commands})  {time}")
 
     def update_progress(self):
         data = self.process.readAllStandardOutput()

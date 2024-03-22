@@ -1,5 +1,6 @@
 from PyQt5.QtCore import QObject, pyqtSignal
 import numpy as np
+from datetime import datetime
 
 
 class FileLoader(QObject):
@@ -13,11 +14,13 @@ class FileLoader(QObject):
 
     def run(self):
         for f in self.files_to_load:
-            print(">> Loading " + f)
+            time = datetime.now().strftime("%H:%M:%S:%f")
+            print(f">> Loading {f}  {time}")
             res = np.genfromtxt(f, filling_values=0.0)
             self.loading_results[f] = res
             # self.progress.emit(i + 1)
-        print(">> Loading finished")
+        time = datetime.now().strftime("%H:%M:%S:%f")
+        print(f">> Loading finished  {time}")
         self.finished.emit()
 
     def get_results(self):

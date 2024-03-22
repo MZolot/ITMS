@@ -21,6 +21,8 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
         self.push_button_close.clicked.connect(self.close)
         self.push_button_default.clicked.connect(self.default_button_pushed)
 
+        self.results_widget = None
+
     def __set_layout(self):
         self.scroll_area.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.scroll_area.setContentsMargins(0, 0, 0, 0)
@@ -117,8 +119,11 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
             line_edit.setPlaceholderText(str(parameter.get_current_value()))
 
     def add_result_values(self, v0, ve, ets, u_min, u_max):
-        widget = ResultsWidget(v0, ve, ets, u_min, u_max)
-        self.verticalLayout.insertWidget(1, widget)
+        if self.results_widget is not None:
+            self.verticalLayout.removeWidget(self.results_widget)
+
+        self.results_widget = ResultsWidget(v0, ve, ets, u_min, u_max)
+        self.verticalLayout.insertWidget(1, self.results_widget)
 
 
 class ResultsWidget(QtWidgets.QWidget, results_widget_ui.Ui_Form):

@@ -74,9 +74,9 @@ class InputMenuDialogWithCallbacks(InputMenuDialog):
 
 
 class CalculationMenuDialog(InputMenuDialog):
-    def __init__(self, data_elements, title, calculate_pushed_callback):
+    def __init__(self, data_elements, title, calculate_pushed_callbacks: list):
         super().__init__(data_elements, title)
-        self.calculate_pushed = calculate_pushed_callback
+        self.calculate_pushed = calculate_pushed_callbacks
 
         push_button_calculate = QtWidgets.QPushButton()
         push_button_calculate.setText("Calculate")
@@ -85,7 +85,8 @@ class CalculationMenuDialog(InputMenuDialog):
 
     def calculate_button_pushed(self):
         self.ok_button_pushed()
-        self.calculate_pushed()
+        for c in self.calculate_pushed:
+            c()
 
 
 class ErrorDialog(QtWidgets.QDialog, error_ui.Ui_Dialog):

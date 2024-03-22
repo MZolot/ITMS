@@ -41,7 +41,7 @@ class PlotBuilder:
 class HeatmapPlotBuilder(PlotBuilder):
     def __init__(self, plot_data, default_cmap=True):
         super().__init__()
-        self.line = None
+        self.lines = []
         self.scatter_points: list = []
         self.ellipse = None
         self.source_center = None
@@ -56,17 +56,26 @@ class HeatmapPlotBuilder(PlotBuilder):
         self.figure.colorbar(data, fraction=0.046, pad=0.04)
 
     def get_input_points(self, n=-1):
-        points = self.figure.ginput(n=n, timeout=-1, show_clicks=True,
-                                    mouse_stop=MouseButton.RIGHT,
-                                    mouse_pop=MouseButton.MIDDLE)
+        print(self)
+        print(f"n = {n}")
+        try:
+            points = self.figure.ginput(n=n, timeout=-1, show_clicks=True,
+                                        mouse_stop=MouseButton.RIGHT,
+                                        mouse_pop=MouseButton.MIDDLE)
+        except RuntimeError:
+            print("damn")
+            points = []
+            for i in range(n):
+                points.append((float(i * 10), float(i * 10)))
+
         return points
 
     def draw_points(self, points, color='white', marker="+"):
-        xs = []
-        ys = []
+        # xs = []
+        # ys = []
         for p in points:
-            xs.append(p[0])
-            ys.append(p[1])
+            # xs.append(p[0])
+            # ys.append(p[1])
             self.scatter_points.append(self.axes.scatter(x=p[0], y=p[1], marker=marker, c=color))
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
@@ -80,7 +89,7 @@ class HeatmapPlotBuilder(PlotBuilder):
         self.figure.canvas.flush_events()
 
     def draw_line(self, x1, y1, x2, y2, color='white'):
-        self.axes.plot([x1, x2], [y1, y2], marker='o', color=color)
+        self.lines = self.axes.plot([x1, x2], [y1, y2], marker='o', color=color)
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
 
@@ -103,7 +112,12 @@ class HeatmapPlotBuilder(PlotBuilder):
             self.scatter_points = []
 
     def clear_line(self):
-        self.line.remove()
+        if self.lines:
+            for line in self.lines[:]:
+                line.remove()
+            self.lines = []
+            self.figure.canvas.draw()
+            self.figure.canvas.flush_events()
 
 
 class HeatmapContourPlotBuilder(HeatmapPlotBuilder):

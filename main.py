@@ -130,6 +130,28 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_show_static.triggered.connect(
             lambda: self.plot_widget.set_plot("static"))
 
+        # ============== Results interaction =================
+
+        self.action_heatmap.triggered.connect(
+            lambda: self.plot_widget.set_plot("heatmap")
+        )
+        self.action_3d_heatmap.triggered.connect(
+            lambda: self.plot_widget.set_plot("heatmap 3d")
+        )
+        self.action_heatmap_with_contour.triggered.connect(
+            lambda: self.plot_widget.set_plot("heatmap contour")
+        )
+        self.action_wave_profile_bar_chart.triggered.connect(
+            lambda: self.plot_widget.set_plot("profile")
+        )
+
+        self.action_select_points_on_heatmap.triggered.connect(
+            lambda: self.get_marigram_points("heatmap"))
+        self.action_draw_wave_profile.triggered.connect(
+            lambda: print("draw profile triggered")
+        )
+        self.action_draw_wave_profile.triggered.connect(self.draw_wave_profile)
+
     def open_most_input_menu(self, element_names, title, menu_type=""):
         elements = []
         for n in element_names:
@@ -142,7 +164,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             menu = InputMenuDialogWithCallbacks(elements, title,
                                                 [lambda: self.MOST_subprogram.draw_source(self.bottom_plot)])
         elif menu_type == "calculation":
-            menu = CalculationMenuDialog(elements, title, self.MOST_subprogram.start_subprogram)
+            menu = CalculationMenuDialog(elements, title,
+                                         [lambda: self.MOST_subprogram.start_subprogram(self.show_error_message)])
         else:
             menu = InputMenuDialog(elements, title)
         menu.exec()
@@ -183,23 +206,28 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         if (self.MOST_subprogram.marigram_points is not None) & (self.MOST_subprogram.marigram_points != []):
             self.action_marigrams.setEnabled(True)
 
-        self.action_heatmap.triggered.connect(
-            lambda: self.plot_widget.set_plot("heatmap")
-        )
-        self.action_3d_heatmap.triggered.connect(
-            lambda: self.plot_widget.set_plot("heatmap 3d")
-        )
-        self.action_heatmap_with_contour.triggered.connect(
-            lambda: self.plot_widget.set_plot("heatmap contour")
-        )
-        self.action_wave_profile_bar_chart.triggered.connect(
-            lambda: self.plot_widget.set_plot("profile")
-        )
-
         self.action_select_points_on_heatmap.setEnabled(True)
-        self.action_select_points_on_heatmap.triggered.connect(
-            lambda: self.get_marigram_points("heatmap"))
-        self.action_draw_wave_profile.triggered.connect(self.draw_wave_profile)
+
+        # self.action_heatmap.triggered.connect(
+        #     lambda: self.plot_widget.set_plot("heatmap")
+        # )
+        # self.action_3d_heatmap.triggered.connect(
+        #     lambda: self.plot_widget.set_plot("heatmap 3d")
+        # )
+        # self.action_heatmap_with_contour.triggered.connect(
+        #     lambda: self.plot_widget.set_plot("heatmap contour")
+        # )
+        # self.action_wave_profile_bar_chart.triggered.connect(
+        #     lambda: self.plot_widget.set_plot("profile")
+        # )
+        #
+        # self.action_select_points_on_heatmap.setEnabled(True)
+        # self.action_select_points_on_heatmap.triggered.connect(
+        #     lambda: self.get_marigram_points("heatmap"))
+        # self.action_draw_wave_profile.triggered.connect(
+        #     lambda: print("draw profile triggered")
+        # )
+        # self.action_draw_wave_profile.triggered.connect(self.draw_wave_profile)
 
         self.plot_widget.set_plot("heatmap")
         self.setCentralWidget(self.plot_widget.get_widget())
@@ -223,7 +251,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     def draw_wave_profile(self):
         self.plot_widget.set_plot("heatmap")
         plot: HeatmapPlotBuilder = self.plot_widget.get_plot_by_name("heatmap")
-        plot.clear_points()
+        # plot.clear_points()
+        plot.clear_line()
         self.wave_profile_end_points = plot.get_input_points(n=2)
         # plot.draw_points(self.wave_profile_end_points)
         plot.draw_line(self.wave_profile_end_points[0][0], self.wave_profile_end_points[0][1],
@@ -371,18 +400,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.action_calculate_most_static.setEnabled(True)
         self.action_show_static.setEnabled(True)
-
-        self.action_heatmap.triggered.connect(
-            lambda: self.plot_widget.set_plot("heatmap")
-        )
-        self.action_3d_heatmap.triggered.connect(
-            lambda: self.plot_widget.set_plot("heatmap 3d")
-        )
-        self.action_heatmap_with_contour.triggered.connect(
-            lambda: self.plot_widget.set_plot("heatmap contour")
-        )
-
-        # self.action_draw_wave_profile.triggered.connect(self.draw_wave_profile)
 
         self.plot_widget.set_plot("heatmap")
         self.setCentralWidget(self.plot_widget.get_widget())
