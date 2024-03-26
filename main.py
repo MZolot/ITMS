@@ -147,9 +147,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.action_select_points_on_heatmap.triggered.connect(
             lambda: self.get_marigram_points("heatmap"))
-        self.action_draw_wave_profile.triggered.connect(
-            lambda: print("draw profile triggered")
-        )
+
         self.action_draw_wave_profile.triggered.connect(self.draw_wave_profile)
 
     def open_most_input_menu(self, element_names, title, menu_type=""):
@@ -236,6 +234,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.plot_widget.set_plot(plot_name)
         plot: HeatmapPlotBuilder = self.plot_widget.get_plot_by_name(plot_name)
         plot.clear_points()
+        plot.clear_line()
         marigram_points = plot.get_input_points()
         plot.draw_points(marigram_points)
 
@@ -251,9 +250,11 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     def draw_wave_profile(self):
         self.plot_widget.set_plot("heatmap")
         plot: HeatmapPlotBuilder = self.plot_widget.get_plot_by_name("heatmap")
-        # plot.clear_points()
+        plot.clear_points()  # убирает мареограммы
         plot.clear_line()
         self.wave_profile_end_points = plot.get_input_points(n=2)
+        if len(self.wave_profile_end_points) < 2:
+            return
         # plot.draw_points(self.wave_profile_end_points)
         plot.draw_line(self.wave_profile_end_points[0][0], self.wave_profile_end_points[0][1],
                        self.wave_profile_end_points[1][0], self.wave_profile_end_points[1][1])

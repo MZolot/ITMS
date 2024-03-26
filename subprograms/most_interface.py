@@ -270,6 +270,8 @@ class MOSTInterface(SubprogramInterface):
             self.draw_static_source(plot)
 
     def draw_elliptical_source(self, plot: HeatmapPlotBuilder):
+        plot.clear_contour()
+        plot.clear_rectangle()
         x = self.ini_data_elements["center x"].get_current_value()
         y = self.ini_data_elements["center y"].get_current_value()
         x_step = self.ini_data_elements["x-step"].get_current_value()
@@ -281,6 +283,8 @@ class MOSTInterface(SubprogramInterface):
         )
 
     def draw_static_source(self, plot: HeatmapPlotBuilder):
+        plot.clear_contour()
+        plot.clear_rectangle()
         z = np.loadtxt("subprograms\\MOST_with_STATIC\\static.txt")
 
         x = int(self.static.ini_data_elements["x"].get_current_value())
@@ -293,6 +297,7 @@ class MOSTInterface(SubprogramInterface):
         y_arr = list(range(start_y, start_y + n))
         levels = self.static.isoline_levels
         plot.draw_contour(x_arr, y_arr, z, levels)
+        plot.draw_rectangle(start_x - 1, start_y - 1, n, m)
 
     def plot_marigrams(self):
         x = []
@@ -303,8 +308,9 @@ class MOSTInterface(SubprogramInterface):
         for i in range(0, steps_total, steps_between):
             x.append(i * time_step)
 
-        print("marigram points:")
-        print(self.marigram_points)
+        print(">>> Marigram points:")
+        for point in self.marigram_points:
+            print("     " + str(point))
         self.marigrams_plot_data = []
         n_marigrams = len(self.marigram_points)
         length = len(self.height)

@@ -183,4 +183,4 @@ class Ui_MainWindow(object):
         self.action_calculate_most_static.setText(_translate("MainWindow", "Run MOST with STATIC source"))
         self.action_elliptical_source.setText(_translate("MainWindow", "Elliptical..."))
         self.action_static_source.setText(_translate("MainWindow", "STATIC..."))
-        self.action_show_static.setText(_translate("MainWindow", "Show STATIC source"))
+        self.action_show_static.setText(_translate("MainWindow", "Show STATIC heatmap"))
