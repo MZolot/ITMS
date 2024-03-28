@@ -3,6 +3,7 @@ from ui_elements.input_dialog import *
 from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
 from ui_elements.load_data_file_selection_dialog import FileSelectionMenuDialog
 from ui_elements.static_settings_dialog import StaticSettingsDialog
+from ui_elements.static_profile_dialog import StaticProfileDialog
 
 from subprograms.subprogram_interface import SubprogramInterface
 from subprograms.most_interface import MOSTInterface
@@ -88,11 +89,11 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         # self.MOST_subprogram.draw_elliptical_source()
 
-        self.static_dialog = None
+        self.static_settings_dialog = None
+        self.static_profile_dialog = None
 
         self.wave_profile_end_points = []
         self.wave_profile_data = None
-        self.wave_profile_plot = None
 
         self.setupUi(self)
         self.set_actions()
@@ -129,6 +130,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_static_source.triggered.connect(self.open_static_settings_dialog)
         self.action_show_static.triggered.connect(
             lambda: self.plot_widget.set_plot("static"))
+        self.action_draw_static_profile.triggered.connect(self.open_static_profile_dialog)
 
         # ============== Results interaction =================
 
@@ -148,7 +150,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_select_points_on_heatmap.triggered.connect(
             lambda: self.get_marigram_points("heatmap"))
 
-        self.action_draw_wave_profile.triggered.connect(self.draw_wave_profile)
+        self.action_draw_wave_profile.triggered.connect(self.draw_wave_profile_on_most)
 
     def open_most_input_menu(self, element_names, title, menu_type=""):
         elements = []
@@ -206,27 +208,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.action_select_points_on_heatmap.setEnabled(True)
 
-        # self.action_heatmap.triggered.connect(
-        #     lambda: self.plot_widget.set_plot("heatmap")
-        # )
-        # self.action_3d_heatmap.triggered.connect(
-        #     lambda: self.plot_widget.set_plot("heatmap 3d")
-        # )
-        # self.action_heatmap_with_contour.triggered.connect(
-        #     lambda: self.plot_widget.set_plot("heatmap contour")
-        # )
-        # self.action_wave_profile_bar_chart.triggered.connect(
-        #     lambda: self.plot_widget.set_plot("profile")
-        # )
-        #
-        # self.action_select_points_on_heatmap.setEnabled(True)
-        # self.action_select_points_on_heatmap.triggered.connect(
-        #     lambda: self.get_marigram_points("heatmap"))
-        # self.action_draw_wave_profile.triggered.connect(
-        #     lambda: print("draw profile triggered")
-        # )
-        # self.action_draw_wave_profile.triggered.connect(self.draw_wave_profile)
-
         self.plot_widget.set_plot("heatmap")
         self.setCentralWidget(self.plot_widget.get_widget())
 
@@ -247,9 +228,19 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.MOST_subprogram.plot_marigrams()
         self.plot_widget.set_plot("marigrams")
 
-    def draw_wave_profile(self):
+    def draw_wave_profile_on_most(self):
         self.plot_widget.set_plot("heatmap")
-        plot: HeatmapPlotBuilder = self.plot_widget.get_plot_by_name("heatmap")
+        plot = self.plot_widget.get_plot_by_name("heatmap")
+        wave_profile_plot = self.get_wave_profile(plot, self.MOST_subprogram.max_height)
+        self.plot_widget.add_plot("profile", wave_profile_plot)
+
+    def draw_wave_profile_on_static(self, draw_profile_callback):
+        self.plot_widget.set_plot("bottom")
+        plot = self.plot_widget.get_plot_by_name("bottom")
+        wave_profile_plot = self.get_wave_profile(plot, self.bottom_map)
+        draw_profile_callback(wave_profile_plot)
+
+    def get_wave_profile(self, plot: HeatmapPlotBuilder, data_source):
         plot.clear_points()  # убирает мареограммы
         plot.clear_line()
         self.wave_profile_end_points = plot.get_input_points(n=2)
@@ -259,9 +250,68 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         plot.draw_line(self.wave_profile_end_points[0][0], self.wave_profile_end_points[0][1],
                        self.wave_profile_end_points[1][0], self.wave_profile_end_points[1][1])
 
-        self.wave_profile_data = self.get_wave_profile_on_line()
-        self.wave_profile_plot = BarPlotBuilder(self.wave_profile_data, self.save_wave_profile_data)
-        self.plot_widget.add_plot("profile", self.wave_profile_plot)
+        self.wave_profile_data = self.get_wave_profile_on_line(self.wave_profile_end_points, data_source)
+        wave_profile_plot = BarPlotBuilder(self.wave_profile_data, self.save_wave_profile_data)
+        return wave_profile_plot
+
+    def get_wave_profile_on_line(self, wave_profile_end_points, data_source):
+        x1 = round(wave_profile_end_points[0][0])
+        y1 = round(wave_profile_end_points[0][1])
+        x2 = round(wave_profile_end_points[1][0])
+        y2 = round(wave_profile_end_points[1][1])
+
+        x_len = x2 - x1
+        y_len = y2 - y1
+
+        data = []
+
+        if abs(x_len) >= abs(y_len):
+            x_step = 1
+            y_step = y_len / x_len
+
+            if x1 < x2:
+                curr_x = x1
+                curr_y = y1
+                fin = x2
+            else:
+                curr_x = x2
+                curr_y = y2
+                fin = x1
+
+            curr = curr_x
+        else:
+            y_step = 1
+            x_step = x_len / y_len
+
+            if y1 < y2:
+                curr_x = x1
+                curr_y = y1
+                fin = y2
+            else:
+                curr_x = x2
+                curr_y = y2
+                fin = y1
+
+            curr = curr_y
+
+        while abs(curr - fin) > 0:
+            curr_x += x_step
+            curr_y += y_step
+            curr += 1
+            try:
+                data.append(data_source[round(curr_y), round(curr_x)])
+            except IndexError:
+                print("ERROR")
+                print(wave_profile_end_points)
+                print("steps: " + str((x_step, y_step)))
+                print("lens: " + str((x_len, y_len)))
+                print(curr)
+                print(curr_x)
+                print(curr_y)
+                print('\n')
+                return self.wave_profile_data
+
+        return data
 
     def update_isoline_levels(self, subprogram: SubprogramInterface):
         if not subprogram.calculated:
@@ -303,76 +353,17 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         file.close()
 
-    def get_wave_profile_on_line(self):
-        x1 = round(self.wave_profile_end_points[0][0])
-        y1 = round(self.wave_profile_end_points[0][1])
-        x2 = round(self.wave_profile_end_points[1][0])
-        y2 = round(self.wave_profile_end_points[1][1])
-
-        x_len = x2 - x1
-        y_len = y2 - y1
-
-        data = []
-
-        if abs(x_len) >= abs(y_len):
-            x_step = 1
-            y_step = y_len / x_len
-
-            if x1 < x2:
-                curr_x = x1
-                curr_y = y1
-                fin = x2
-            else:
-                curr_x = x2
-                curr_y = y2
-                fin = x1
-
-            curr = curr_x
-        else:
-            y_step = 1
-            x_step = x_len / y_len
-
-            if y1 < y2:
-                curr_x = x1
-                curr_y = y1
-                fin = y2
-            else:
-                curr_x = x2
-                curr_y = y2
-                fin = y1
-
-            curr = curr_y
-
-        while abs(curr - fin) > 0:
-            curr_x += x_step
-            curr_y += y_step
-            curr += 1
-            try:
-                data.append(self.MOST_subprogram.max_height[round(curr_y), round(curr_x)])
-            except IndexError:
-                print("ERROR")
-                print(self.wave_profile_end_points)
-                print("steps: " + str((x_step, y_step)))
-                print("lens: " + str((x_len, y_len)))
-                print(curr)
-                print(curr_x)
-                print(curr_y)
-                print('\n')
-                return self.wave_profile_data
-
-        return data
-
     def open_static_settings_dialog(self):
-        self.static_dialog = StaticSettingsDialog(self.STATIC_subprogram.ini_data_elements,
-                                                  self.STATIC_subprogram.input_menu_to_elements,
-                                                  [
-                                                      # self.MOST_subprogram.set_source_to_static,
-                                                      self.STATIC_subprogram.start_subprogram
-                                                  ])
+        self.static_settings_dialog = StaticSettingsDialog(self.STATIC_subprogram.ini_data_elements,
+                                                           self.STATIC_subprogram.input_menu_to_elements,
+                                                           [
+                                                               # self.MOST_subprogram.set_source_to_static,
+                                                               self.STATIC_subprogram.start_subprogram
+                                                           ])
 
-        self.static_dialog.move(self.pos() + self.centralWidget().pos() * 5)
-        self.static_dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
-        self.static_dialog.show()
+        self.static_settings_dialog.move(self.pos() + self.centralWidget().pos() * 5)
+        self.static_settings_dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
+        self.static_settings_dialog.show()
 
     def show_static_calculation_screen(self):
         calculation_screen = self.STATIC_subprogram.get_calculation_screen()
@@ -387,11 +378,11 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.plot_widget.add_plot("static", self.STATIC_subprogram.heatmap_plot)
         # self.plot_widget = PlotWidget({"bottom": self.MOST_subprogram.bottom_plot})
 
-        self.static_dialog.add_result_values(self.STATIC_subprogram.v0 / 1000000000,
-                                             self.STATIC_subprogram.ve / 1000000000,
-                                             self.STATIC_subprogram.ets,
-                                             self.STATIC_subprogram.u_min,
-                                             self.STATIC_subprogram.u_max)
+        self.static_settings_dialog.add_result_values(self.STATIC_subprogram.v0 / 1000000000,
+                                                      self.STATIC_subprogram.ve / 1000000000,
+                                                      self.STATIC_subprogram.ets,
+                                                      self.STATIC_subprogram.u_min,
+                                                      self.STATIC_subprogram.u_max)
 
         self.action_heatmap.setEnabled(True)
         self.action_heatmap_with_contour.setEnabled(True)
@@ -401,14 +392,20 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.action_calculate_most_static.setEnabled(True)
         self.action_show_static.setEnabled(True)
+        self.action_draw_static_profile.setEnabled(True)
 
-        self.plot_widget.set_plot("heatmap")
+        self.plot_widget.set_plot("bottom")
         self.setCentralWidget(self.plot_widget.get_widget())
 
     def show_error_message(self):
         print(">> STATIC size error")
         error_dialog = ErrorDialog()
         error_dialog.exec()
+
+    def open_static_profile_dialog(self):
+        self.static_profile_dialog = StaticProfileDialog(self.draw_wave_profile_on_static)
+        self.static_profile_dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
+        self.static_profile_dialog.show()
 
 
 class ErrorDialog(QtWidgets.QDialog, error_ui.Ui_Dialog):
@@ -430,4 +427,5 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     window = MOSTApp()
     window.showMaximized()
+    # window.show()
     app.exec_()

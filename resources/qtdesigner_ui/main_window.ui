@@ -53,6 +53,7 @@
     <addaction name="menu_new_source"/>
     <addaction name="separator"/>
     <addaction name="action_show_static"/>
+    <addaction name="action_draw_static_profile"/>
    </widget>
    <widget class="QMenu" name="menu_marigrams">
     <property name="title">
@@ -268,6 +269,14 @@
    </property>
    <property name="text">
     <string>Show STATIC heatmap</string>
+   </property>
+  </action>
+  <action name="action_draw_static_profile">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Draw STATIC profile</string>
    </property>
   </action>
  </widget>
