@@ -237,10 +237,10 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     def draw_wave_profile_on_static(self, draw_profile_callback):
         self.plot_widget.set_plot("bottom")
         plot = self.plot_widget.get_plot_by_name("bottom")
-        wave_profile_plot = self.get_wave_profile(plot, self.bottom_map)
+        wave_profile_plot = self.get_wave_profile(plot, self.STATIC_subprogram.result, True)
         draw_profile_callback(wave_profile_plot)
 
-    def get_wave_profile(self, plot: HeatmapPlotBuilder, data_source):
+    def get_wave_profile(self, plot: HeatmapPlotBuilder, data_source, static=False):
         plot.clear_points()  # убирает мареограммы
         plot.clear_line()
         self.wave_profile_end_points = plot.get_input_points(n=2)
@@ -250,7 +250,16 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         plot.draw_line(self.wave_profile_end_points[0][0], self.wave_profile_end_points[0][1],
                        self.wave_profile_end_points[1][0], self.wave_profile_end_points[1][1])
 
-        self.wave_profile_data = self.get_wave_profile_on_line(self.wave_profile_end_points, data_source)
+        if static:
+            point1 = self.MOST_subprogram.most_coordinates_to_static_coordinates(self.wave_profile_end_points[0][0],
+                                                                                 self.wave_profile_end_points[0][1])
+            point2 = self.MOST_subprogram.most_coordinates_to_static_coordinates(self.wave_profile_end_points[1][0],
+                                                                                 self.wave_profile_end_points[1][1])
+            wave_profile_end_points = [point1, point2]
+        else:
+            wave_profile_end_points = self.wave_profile_end_points
+
+        self.wave_profile_data = self.get_wave_profile_on_line(wave_profile_end_points, data_source)
         wave_profile_plot = BarPlotBuilder(self.wave_profile_data, self.save_wave_profile_data)
         return wave_profile_plot
 

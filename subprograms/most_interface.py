@@ -61,6 +61,8 @@ class MOSTInterface(SubprogramInterface):
         self.current_program_file_names = self.program_file_names
         self.x_multiplier: int = 1
         self.y_multiplier: int = 1
+        self.static_start_x = None
+        self.static_start_y = None
 
     def load_initial_data(self, config_file_name):
         super().load_initial_data(config_file_name)
@@ -122,23 +124,35 @@ class MOSTInterface(SubprogramInterface):
         self.ini_data_elements["center x"].set_current_value(self.static.ini_data_elements["x"].get_current_value())
         self.ini_data_elements["center y"].set_current_value(self.static.ini_data_elements["y"].get_current_value())
         self.ini_data_elements["max elevation"].set_current_value(0)
+        self.get_static_position()
 
         if self.static.calculated:
             self.print_scaled_static()
+
+    def get_static_position(self):
+        static_grid_x_step = self.static.ini_data_elements["Dx"].get_current_value()
+        static_grid_y_step = self.static.ini_data_elements["Dy"].get_current_value()
+        most_grid_x_step = self.ini_data_elements["x-step"].get_current_value() / 1000
+        most_grid_y_step = self.ini_data_elements["y-step"].get_current_value() / 1000
+        self.x_multiplier = static_grid_x_step / most_grid_x_step
+        self.y_multiplier = static_grid_y_step / most_grid_y_step
+
+        x = int(self.static.ini_data_elements["x"].get_current_value())
+        m = int(self.static.ini_data_elements["M1"].get_current_value() * self.x_multiplier)
+        self.static_start_x = x - int(m / 2)
+        y = int(self.static.ini_data_elements["y"].get_current_value())
+        n = int(self.static.ini_data_elements["N1"].get_current_value() * self.y_multiplier)
+        self.static_start_y = y - int(n / 2)
+
+        print(f"start vals: {self.static_start_x}, {self.static_start_y}")
 
     def print_scaled_static(self):
         # for p in self.static.ini_data_elements.keys():
         #     print(p + " - " + str(self.static.ini_data_elements[p]))
         unscaled_static = np.transpose(self.static.result)
-        static_grid_x_step = self.static.ini_data_elements["Dx"].get_current_value()
-        static_grid_y_step = self.static.ini_data_elements["Dy"].get_current_value()
         n = self.static.ini_data_elements["N1"].get_current_value()
         m = self.static.ini_data_elements["M1"].get_current_value()
-        most_grid_x_step = self.ini_data_elements["x-step"].get_current_value() / 1000
-        most_grid_y_step = self.ini_data_elements["y-step"].get_current_value() / 1000
 
-        self.x_multiplier = static_grid_x_step / most_grid_x_step
-        self.y_multiplier = static_grid_y_step / most_grid_y_step
         x_step = 0
         y_step = 0
 
@@ -287,17 +301,14 @@ class MOSTInterface(SubprogramInterface):
         plot.clear_rectangle()
         z = np.loadtxt("subprograms\\MOST_with_STATIC\\static.txt")
 
-        x = int(self.static.ini_data_elements["x"].get_current_value())
         m = int(self.static.ini_data_elements["M1"].get_current_value() * self.x_multiplier)
-        start_x = x - int(m / 2)
-        x_arr = list(range(start_x, start_x + m))
-        y = int(self.static.ini_data_elements["y"].get_current_value())
         n = int(self.static.ini_data_elements["N1"].get_current_value() * self.y_multiplier)
-        start_y = y - int(n / 2)
-        y_arr = list(range(start_y, start_y + n))
+
+        x_arr = list(range(self.static_start_x, self.static_start_x + m))
+        y_arr = list(range(self.static_start_y, self.static_start_y + n))
         levels = self.static.isoline_levels
         plot.draw_contour(x_arr, y_arr, z, levels)
-        plot.draw_rectangle(start_x - 1, start_y - 1, n, m)
+        plot.draw_rectangle(self.static_start_x - 1, self.static_start_y - 1, n, m)
 
     def plot_marigrams(self):
         x = []
@@ -328,3 +339,24 @@ class MOSTInterface(SubprogramInterface):
                                                    self.save_marigrams)
         self.plot_widget.add_plot("marigrams", self.marigrams_plot)
         self.plot_widget.set_plot("marigrams")
+
+    def most_coordinates_to_static_coordinates(self, most_x, most_y):
+        print(f" input from MOST: {most_x}, {most_y}")
+
+        m = int(self.static.ini_data_elements["M1"].get_current_value())
+        n = int(self.static.ini_data_elements["N1"].get_current_value() * self.y_multiplier)
+
+        static_x = (most_x - self.static_start_x) / self.x_multiplier
+        static_y = (most_y - self.static_start_y) / self.y_multiplier
+
+        if most_x < self.static_start_x:
+            static_x = 0
+        if most_x > self.static_start_x + (m * self.x_multiplier):
+            static_x = m - 1
+        if most_y < self.static_start_y:
+            static_y = 0
+        if most_y > self.static_start_y + (n * self.y_multiplier):
+            static_y = n - 1
+
+        print(f" result on STATIC: {static_x}, {static_y}")
+        return static_x, static_y
