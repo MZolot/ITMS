@@ -220,6 +220,13 @@ class MarigramsPlotBuilder(PlotBuilder):
         self.figure.subplots_adjust(right=0.83)
 
 
+class CoommonPlotBuilder(PlotBuilder):
+    def __init__(self, plot_data):
+        super().__init__()
+        self.axes = self.figure.add_subplot(111)
+        self.axes.plot(range(len(plot_data)), plot_data)
+
+
 class ToolbarWithSaveData(NavigationToolbar):
     toolitems = [*NavigationToolbar.toolitems,
                  ('SaveData', 'Save data', str(os.getcwd()) + '\\resources\\save_file_icon', 'save_data')]

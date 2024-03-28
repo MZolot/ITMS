@@ -12,7 +12,8 @@ from subprograms.static_interface import STATICInterface
 from plots.stacked_plots_widget import PlotWidget
 from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            HeatmapContourPlotBuilder,
-                                           BarPlotBuilder)
+                                           BarPlotBuilder,
+                                           CoommonPlotBuilder)
 
 from PyQt5 import QtWidgets, QtCore
 
@@ -231,37 +232,48 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     def draw_wave_profile_on_most(self):
         self.plot_widget.set_plot("heatmap")
         plot = self.plot_widget.get_plot_by_name("heatmap")
-        wave_profile_plot = self.get_wave_profile(plot, self.MOST_subprogram.max_height)
-        self.plot_widget.add_plot("profile", wave_profile_plot)
 
-    def draw_wave_profile_on_static(self, draw_profile_callback):
-        self.plot_widget.set_plot("bottom")
-        plot = self.plot_widget.get_plot_by_name("bottom")
-        wave_profile_plot = self.get_wave_profile(plot, self.STATIC_subprogram.result, True)
-        draw_profile_callback(wave_profile_plot)
-
-    def get_wave_profile(self, plot: HeatmapPlotBuilder, data_source, static=False):
         plot.clear_points()  # убирает мареограммы
         plot.clear_line()
         self.wave_profile_end_points = plot.get_input_points(n=2)
         if len(self.wave_profile_end_points) < 2:
             return
-        # plot.draw_points(self.wave_profile_end_points)
+
         plot.draw_line(self.wave_profile_end_points[0][0], self.wave_profile_end_points[0][1],
                        self.wave_profile_end_points[1][0], self.wave_profile_end_points[1][1])
 
-        if static:
-            point1 = self.MOST_subprogram.most_coordinates_to_static_coordinates(self.wave_profile_end_points[0][0],
-                                                                                 self.wave_profile_end_points[0][1])
-            point2 = self.MOST_subprogram.most_coordinates_to_static_coordinates(self.wave_profile_end_points[1][0],
-                                                                                 self.wave_profile_end_points[1][1])
-            wave_profile_end_points = [point1, point2]
-        else:
-            wave_profile_end_points = self.wave_profile_end_points
-
-        self.wave_profile_data = self.get_wave_profile_on_line(wave_profile_end_points, data_source)
+        self.wave_profile_data = self.get_wave_profile_on_line(self.wave_profile_end_points,
+                                                               self.MOST_subprogram.max_height)
         wave_profile_plot = BarPlotBuilder(self.wave_profile_data, self.save_wave_profile_data)
-        return wave_profile_plot
+
+        # wave_profile_plot = self.get_wave_profile(plot, self.MOST_subprogram.max_height)
+        self.plot_widget.add_plot("profile", wave_profile_plot)
+
+    def draw_wave_profile_on_static(self, draw_profile_callback):
+        self.plot_widget.set_plot("bottom")
+        plot = self.plot_widget.get_plot_by_name("bottom")
+
+        plot.clear_points()
+        plot.clear_line()
+        wave_profile_end_points = plot.get_input_points(n=2)
+        print(wave_profile_end_points)
+        if len(wave_profile_end_points) < 2:
+            return
+        # plot.draw_points(self.wave_profile_end_points)
+        plot.draw_line(wave_profile_end_points[0][0], wave_profile_end_points[0][1],
+                       wave_profile_end_points[1][0], wave_profile_end_points[1][1])
+
+        point1 = self.MOST_subprogram.most_coordinates_to_static_coordinates(wave_profile_end_points[0][0],
+                                                                             wave_profile_end_points[0][1])
+        point2 = self.MOST_subprogram.most_coordinates_to_static_coordinates(wave_profile_end_points[1][0],
+                                                                             wave_profile_end_points[1][1])
+        wave_profile_end_points = [point1, point2]
+
+        wave_profile_data = self.get_wave_profile_on_line(wave_profile_end_points, self.STATIC_subprogram.result)
+        wave_profile_plot = CoommonPlotBuilder(wave_profile_data)
+
+        # wave_profile_plot = self.get_wave_profile(plot, self.STATIC_subprogram.result, True)
+        draw_profile_callback(wave_profile_plot)
 
     def get_wave_profile_on_line(self, wave_profile_end_points, data_source):
         x1 = round(wave_profile_end_points[0][0])

@@ -1,5 +1,3 @@
-import numpy as np
-
 from subprograms.subprogram_interface import SubprogramInterface
 from subprograms.static_interface import STATICInterface
 
@@ -14,6 +12,7 @@ from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            MarigramsPlotBuilder)
 from PyQt5.QtCore import QProcess, QThread
 from datetime import datetime
+import numpy as np
 
 
 class MOSTInterface(SubprogramInterface):
@@ -143,8 +142,6 @@ class MOSTInterface(SubprogramInterface):
         y = int(self.static.ini_data_elements["y"].get_current_value())
         n = int(self.static.ini_data_elements["N1"].get_current_value() * self.y_multiplier)
         self.static_start_y = y - int(n / 2)
-
-        print(f"start vals: {self.static_start_x}, {self.static_start_y}")
 
     def print_scaled_static(self):
         # for p in self.static.ini_data_elements.keys():
@@ -341,8 +338,6 @@ class MOSTInterface(SubprogramInterface):
         self.plot_widget.set_plot("marigrams")
 
     def most_coordinates_to_static_coordinates(self, most_x, most_y):
-        print(f" input from MOST: {most_x}, {most_y}")
-
         m = int(self.static.ini_data_elements["M1"].get_current_value())
         n = int(self.static.ini_data_elements["N1"].get_current_value() * self.y_multiplier)
 
@@ -358,5 +353,4 @@ class MOSTInterface(SubprogramInterface):
         if most_y > self.static_start_y + (n * self.y_multiplier):
             static_y = n - 1
 
-        print(f" result on STATIC: {static_x}, {static_y}")
         return static_x, static_y
