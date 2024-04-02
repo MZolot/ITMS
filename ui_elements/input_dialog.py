@@ -1,5 +1,5 @@
 import ui_elements.qt_designer_ui.input_menu_ui as menu_ui
-import ui_elements.qt_designer_ui.error_dialog as error_ui
+import ui_elements.qt_designer_ui.error_dialog_ui as error_ui
 from data_entry import DataEntry
 from PyQt5 import QtWidgets
 
@@ -80,7 +80,7 @@ class CalculationMenuDialog(InputMenuDialog):
 
         push_button_calculate = QtWidgets.QPushButton()
         push_button_calculate.setText("Calculate")
-        self.buttons_horizontal_layout.insertWidget(0, push_button_calculate)
+        self.buttons_horizontal_layout.insertWidget(1, push_button_calculate)
         push_button_calculate.clicked.connect(self.calculate_button_pushed)
 
     def calculate_button_pushed(self):

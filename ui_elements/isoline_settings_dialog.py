@@ -1,5 +1,5 @@
 import ui_elements.qt_designer_ui.isoline_settings_dialog_ui as menu_ui
-import ui_elements.qt_designer_ui.error_dialog as error_ui
+import ui_elements.qt_designer_ui.error_dialog_ui as error_ui
 from PyQt5 import QtWidgets
 
 

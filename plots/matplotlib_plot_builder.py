@@ -220,11 +220,24 @@ class MarigramsPlotBuilder(PlotBuilder):
         self.figure.subplots_adjust(right=0.83)
 
 
-class CoommonPlotBuilder(PlotBuilder):
+class CommonPlotBuilder(PlotBuilder):
     def __init__(self, plot_data):
         super().__init__()
+        x = range(len(plot_data))
+        data = np.array(plot_data)
+        # positive = np.ma.masked_where(data < 0, data, True)
+        # negative = np.ma.masked_where(data >= 0, data, True)
+
+        # print(data)
+        # print("\npositive:")
+        # print(positive)
+        # print("\nnegative:")
+        # print(negative)
+
         self.axes = self.figure.add_subplot(111)
-        self.axes.plot(range(len(plot_data)), plot_data)
+        # self.axes.plot(x, data, 'g', x, positive, 'r', x, negative, 'b')
+        self.axes.plot(x, data, 'b')
+        self.axes.grid()
 
 
 class ToolbarWithSaveData(NavigationToolbar):

@@ -1,11 +1,11 @@
-import ui_elements.qt_designer_ui.static_profile_dialog as dialog_ui
+import ui_elements.qt_designer_ui.static_profile_dialog_ui as dialog_ui
 from plots.matplotlib_plot_builder import PlotBuilder
 from PyQt5 import QtWidgets
 
 
 class StaticProfileDialog(QtWidgets.QDialog, dialog_ui.Ui_Dialog):
-    def __init__(self, new_profile_callback_function: callable):
-        super().__init__()
+    def __init__(self, parent, new_profile_callback_function: callable):
+        super().__init__(parent)
         self.setupUi(self)
         self.new_profile_callback_function = new_profile_callback_function
 

@@ -1,18 +1,18 @@
 import ui_elements.qt_designer_ui.static_settings_ui as settings_ui
 import ui_elements.qt_designer_ui.static_results_widget_ui as results_widget_ui
-import ui_elements.qt_designer_ui.error_dialog as error_ui
+import ui_elements.qt_designer_ui.error_dialog_ui as error_ui
 from ui_elements.collapsible_box import CollapsibleBox
 from data_entry import DataEntry
 from PyQt5 import QtWidgets
 
 
 class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
-    def __init__(self, parameters: dict[str, DataEntry], parameters_to_menu_section, calculate_callbacks: list):
+    def __init__(self, parent, parameters: dict[str, DataEntry], parameters_to_menu_section, calculate_callbacks: list):
         self.parameters = parameters
         self.parameters_to_menu = parameters_to_menu_section
         self.calculate_callbacks = calculate_callbacks
 
-        super().__init__()
+        super().__init__(parent)
         self.setupUi(self)
 
         self.line_edits: dict[str, QtWidgets.QLineEdit] = {}

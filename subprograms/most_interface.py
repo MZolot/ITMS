@@ -5,7 +5,8 @@ from ui_elements.load_data_file_selection_dialog import *
 from ui_elements.waiting_screens import *
 from file_loader import *
 from plots.stacked_plots_widget import PlotWidget
-from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
+from plots.matplotlib_plot_builder import (PlotBuilder,
+                                           HeatmapPlotBuilder,
                                            HeatmapContourPlotBuilder,
                                            Heatmap3DPlotBuilder,
                                            BarPlotBuilder,
@@ -49,6 +50,7 @@ class MOSTInterface(SubprogramInterface):
         self.steps_calculated: int = 0
         self.height = None
         self.max_height = None
+        self.results_name_to_plot: dict[str, PlotBuilder] = {}
 
         self.working_directory_with_static = subprogram_with_static_directory
         self.program_with_static_file_names = super().add_directory_to_file_names(subprogram_with_static_directory,
@@ -270,6 +272,11 @@ class MOSTInterface(SubprogramInterface):
         self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
         self.plot_widget.add_plot("heatmap 3d", self.heatmap_3d_plot)
         self.plot_widget.add_plot("profile", self.wave_profile_plot)
+
+        self.results_name_to_plot["heatmap"] = self.heatmap_plot
+        self.results_name_to_plot["heatmap contour"] = self.heatmap_with_contour_plot
+        self.results_name_to_plot["heatmap 3d"] = self.heatmap_3d_plot
+        self.results_name_to_plot["profile"] = self.wave_profile_plot
 
         self.show_results_callback()
 

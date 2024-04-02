@@ -4,6 +4,7 @@ from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
 from ui_elements.load_data_file_selection_dialog import FileSelectionMenuDialog
 from ui_elements.static_settings_dialog import StaticSettingsDialog
 from ui_elements.static_profile_dialog import StaticProfileDialog
+from ui_elements.most_results_dialog import MostResultsDialog
 
 from subprograms.subprogram_interface import SubprogramInterface
 from subprograms.most_interface import MOSTInterface
@@ -13,7 +14,7 @@ from plots.stacked_plots_widget import PlotWidget
 from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            HeatmapContourPlotBuilder,
                                            BarPlotBuilder,
-                                           CoommonPlotBuilder)
+                                           CommonPlotBuilder)
 
 from PyQt5 import QtWidgets, QtCore
 
@@ -135,17 +136,30 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         # ============== Results interaction =================
 
+        # self.action_heatmap.triggered.connect(
+        #     lambda: self.plot_widget.set_plot("heatmap")
+        # )
+        # self.action_3d_heatmap.triggered.connect(
+        #     lambda: self.plot_widget.set_plot("heatmap 3d")
+        # )
+        # self.action_heatmap_with_contour.triggered.connect(
+        #     lambda: self.plot_widget.set_plot("heatmap contour")
+        # )
+        # self.action_wave_profile_bar_chart.triggered.connect(
+        #     lambda: self.plot_widget.set_plot("profile")
+        # )
+
         self.action_heatmap.triggered.connect(
-            lambda: self.plot_widget.set_plot("heatmap")
+            lambda: self.open_results_dialog("heatmap", "Heatmap")
         )
         self.action_3d_heatmap.triggered.connect(
-            lambda: self.plot_widget.set_plot("heatmap 3d")
+            lambda: self.open_results_dialog("heatmap 3d", "3D Heatmap")
         )
         self.action_heatmap_with_contour.triggered.connect(
-            lambda: self.plot_widget.set_plot("heatmap contour")
+            lambda: self.open_results_dialog("heatmap contour", "Heatmap with contour lines")
         )
         self.action_wave_profile_bar_chart.triggered.connect(
-            lambda: self.plot_widget.set_plot("profile")
+            lambda: self.open_results_dialog("profile", "Wave profile")
         )
 
         self.action_select_points_on_heatmap.triggered.connect(
@@ -209,8 +223,19 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.action_select_points_on_heatmap.setEnabled(True)
 
-        self.plot_widget.set_plot("heatmap")
+        # self.plot_widget.set_plot("heatmap")
+        # self.setCentralWidget(self.plot_widget.get_widget())
+
+        self.plot_widget.set_plot("bottom")
         self.setCentralWidget(self.plot_widget.get_widget())
+        self.open_results_dialog("heatmap", "Heatmap")
+
+    def open_results_dialog(self, plot_name: str, dialog_title):
+        plot = self.MOST_subprogram.results_name_to_plot[plot_name]
+        plot.update_canvas()
+        dialog = MostResultsDialog(self, dialog_title, plot)
+        # dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
+        dialog.show()
 
     def get_marigram_points(self, plot_name: str):
         self.plot_widget.set_plot(plot_name)
@@ -270,7 +295,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         wave_profile_end_points = [point1, point2]
 
         wave_profile_data = self.get_wave_profile_on_line(wave_profile_end_points, self.STATIC_subprogram.result)
-        wave_profile_plot = CoommonPlotBuilder(wave_profile_data)
+        wave_profile_plot = CommonPlotBuilder(wave_profile_data)
 
         # wave_profile_plot = self.get_wave_profile(plot, self.STATIC_subprogram.result, True)
         draw_profile_callback(wave_profile_plot)
@@ -375,7 +400,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         file.close()
 
     def open_static_settings_dialog(self):
-        self.static_settings_dialog = StaticSettingsDialog(self.STATIC_subprogram.ini_data_elements,
+        self.static_settings_dialog = StaticSettingsDialog(self,
+                                                           self.STATIC_subprogram.ini_data_elements,
                                                            self.STATIC_subprogram.input_menu_to_elements,
                                                            [
                                                                # self.MOST_subprogram.set_source_to_static,
@@ -383,7 +409,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                                            ])
 
         self.static_settings_dialog.move(self.pos() + self.centralWidget().pos() * 5)
-        self.static_settings_dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
+        # self.static_settings_dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
         self.static_settings_dialog.show()
 
     def show_static_calculation_screen(self):
@@ -424,8 +450,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         error_dialog.exec()
 
     def open_static_profile_dialog(self):
-        self.static_profile_dialog = StaticProfileDialog(self.draw_wave_profile_on_static)
-        self.static_profile_dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
+        self.static_profile_dialog = StaticProfileDialog(self, self.draw_wave_profile_on_static)
+        # self.static_profile_dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
         self.static_profile_dialog.show()
 
 
