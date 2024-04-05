@@ -223,10 +223,23 @@ class MarigramsPlotBuilder(PlotBuilder):
 class CommonPlotBuilder(PlotBuilder):
     def __init__(self, plot_data):
         super().__init__()
-        x = range(len(plot_data))
+        x = np.array([range(len(plot_data))]).transpose()
         data = np.array(plot_data)
-        # positive = np.ma.masked_where(data < 0, data, True)
+        # ind_zero = np.nonzero(((data[1:] < 0) & (data[:-1] >= 0)) |
+        #                       ((data[1:] > 0) & (data[:-1] <= 0)))
+        # for i in ind_zero[-1:0:-1]:
+        #     curr_x = i + (1 / (data[i + 1] - data[i]))
+        #     np.insert(data, i, curr_x)
+        #     np.insert(data, i, 0)
+
+        # positive = np.ma.masked_where(data <= 0, data, True)
         # negative = np.ma.masked_where(data >= 0, data, True)
+
+        # positive = data.copy()
+        # positive[data < 0] = None
+        #
+        # negative = data.copy()
+        # negative[data > 0] = None
 
         # print(data)
         # print("\npositive:")
@@ -236,6 +249,7 @@ class CommonPlotBuilder(PlotBuilder):
 
         self.axes = self.figure.add_subplot(111)
         # self.axes.plot(x, data, 'g', x, positive, 'r', x, negative, 'b')
+        # self.axes.plot(x, positive, 'r', x, negative, 'b')
         self.axes.plot(x, data, 'b')
         self.axes.grid()
 
