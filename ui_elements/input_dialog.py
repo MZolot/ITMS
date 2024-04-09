@@ -1,7 +1,7 @@
 import ui_elements.qt_designer_ui.input_menu_ui as menu_ui
 import ui_elements.qt_designer_ui.error_dialog_ui as error_ui
 from data_entry import DataEntry
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui
 
 
 class InputMenuDialog(QtWidgets.QDialog, menu_ui.Ui_Dialog):
@@ -83,10 +83,14 @@ class CalculationMenuDialog(InputMenuDialog):
         self.buttons_horizontal_layout.insertWidget(1, push_button_calculate)
         push_button_calculate.clicked.connect(self.calculate_button_pushed)
 
+        font = QtGui.QFont()
+        font.setBold(True)
+        push_button_calculate.setFont(font)
+
     def calculate_button_pushed(self):
         self.ok_button_pushed()
-        for c in self.calculate_pushed:
-            c()
+        for callback in self.calculate_pushed:
+            callback()
 
 
 class ErrorDialog(QtWidgets.QDialog, error_ui.Ui_Dialog):

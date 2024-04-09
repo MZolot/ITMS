@@ -3,7 +3,7 @@ import ui_elements.qt_designer_ui.static_results_widget_ui as results_widget_ui
 import ui_elements.qt_designer_ui.error_dialog_ui as error_ui
 from ui_elements.collapsible_box import CollapsibleBox
 from data_entry import DataEntry
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore, QtGui
 
 
 class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
@@ -34,12 +34,17 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
         coordinates_parameters = [self.parameters[p] for p in
                                   self.parameters_to_menu["coordinates"]]
 
+        font = QtGui.QFont()
+        font.setBold(True)
+
         coordinates_label = QtWidgets.QLabel("Coordinates parameters")
+        coordinates_label.setFont(font)
         coordinates_container = QtWidgets.QWidget()
         coordinates_container.setContentsMargins(0, 0, 0, 0)
         coordinates_container.setLayout(self.__layout_parameters(coordinates_parameters))
 
         fault_label = QtWidgets.QLabel("Fault parameters")
+        fault_label.setFont(font)
         fault_container = QtWidgets.QWidget()
         fault_container.setContentsMargins(0, 0, 0, 0)
         fault_container.setLayout(self.__layout_parameters(fault_parameters))
@@ -86,7 +91,7 @@ class StaticSettingsDialog(QtWidgets.QDialog, settings_ui.Ui_Dialog):
             parameter_container.setAutoFillBackground(True)
             # parameter_container.setStyleSheet()
 
-            layout.addWidget(parameter_container)
+            layout.addWidget(parameter_container, QtCore.Qt.AlignHCenter)
         return layout
 
     def calculate_button_pushed(self):

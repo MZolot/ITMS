@@ -55,6 +55,9 @@ class HeatmapPlotBuilder(PlotBuilder):
             data = self.axes.imshow(plot_data, cmap=cmap_imshow)
 
         self.figure.colorbar(data, fraction=0.046, pad=0.04)
+        self.axes.set_xlabel("x", loc='right', fontsize=14)
+        self.axes.set_ylabel("y", loc='top', fontsize=14)
+        # self.axes.xaxis.tick_top()
 
     def get_input_points(self, n=-1):
         points = self.figure.ginput(n=n, timeout=-1, show_clicks=True,
@@ -135,7 +138,10 @@ class HeatmapPlotBuilder(PlotBuilder):
 class HeatmapContourPlotBuilder(HeatmapPlotBuilder):
     def __init__(self, plot_data, levels: list | int, use_default_cmap=True):
         super().__init__(plot_data, use_default_cmap)
-        self.levels = sorted(levels)
+
+        self.levels = levels
+        if isinstance(self.levels, list):
+            self.levels = sorted(levels)
 
         if use_default_cmap:
             self.axes.contourf(plot_data, levels=self.levels)

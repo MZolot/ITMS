@@ -1,4 +1,5 @@
 import ui_elements.qt_designer_ui.main_ui as main_ui
+import ui_elements.qt_designer_ui.marigrams_info_message_ui as marigrams_info_ui
 from ui_elements.input_dialog import *
 from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
 from ui_elements.load_data_file_selection_dialog import FileSelectionMenuDialog
@@ -20,6 +21,7 @@ from PyQt5 import QtWidgets, QtCore
 import numpy as np
 
 import sys
+from datetime import datetime
 
 most_config_file_name = "resources/most_parameters_config.json"
 most_ini_data_default_file_name = "subprograms/MOST/ini_data.txt"
@@ -43,7 +45,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.bottom_profile = np.loadtxt(bottom_profile_file_name)
         self.bottom_map = np.transpose(np.tile(self.bottom_profile, (1500, 1)))
         # self.bottom_map = np.tile(self.bottom_profile, (1500, 1))
-        self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
+        self.bottom_plot = HeatmapContourPlotBuilder(self.bottom_map, 10)
 
         self.static_files = {
             "exe": "Static.exe",
@@ -127,8 +129,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_set_contour_lines_levels_for_STATIC.triggered.connect(self.open_isoline_settings_menu_for_static)
 
         self.action_static_source.triggered.connect(self.open_static_settings_dialog)
-        self.action_show_static.triggered.connect(
-            lambda: self.plot_widget.set_plot("static"))
+        self.action_show_static.triggered.connect(self.open_static_result_dialog)
         self.action_draw_static_profile.triggered.connect(self.open_static_profile_dialog)
 
         # ============== Results interaction =================
@@ -147,16 +148,16 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         # )
 
         self.action_heatmap.triggered.connect(
-            lambda: self.open_results_dialog("heatmap", "Heatmap")
+            lambda: self.open_most_results_dialog("heatmap", "Heatmap")
         )
         self.action_3d_heatmap.triggered.connect(
-            lambda: self.open_results_dialog("heatmap 3d", "3D Heatmap")
+            lambda: self.open_most_results_dialog("heatmap 3d", "3D Heatmap")
         )
         self.action_heatmap_with_contour.triggered.connect(
-            lambda: self.open_results_dialog("heatmap contour", "Heatmap with contour lines")
+            lambda: self.open_most_results_dialog("heatmap contour", "Heatmap with contour lines")
         )
         self.action_wave_profile_bar_chart.triggered.connect(
-            lambda: self.open_results_dialog("profile", "Wave profile")
+            lambda: self.open_most_results_dialog("profile", "Wave profile")
         )
 
         self.action_select_points_on_heatmap.triggered.connect(
@@ -205,7 +206,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     # def parse_initial_data_file(self):  # TODO: change to work for static
     def show_most_result(self):
         self.plot_widget = self.MOST_subprogram.plot_widget
-        self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
+        self.bottom_plot = HeatmapContourPlotBuilder(self.bottom_map, 10)
         self.plot_widget.add_plot("bottom", self.bottom_plot)
         self.MOST_subprogram.draw_source(self.bottom_plot)
 
@@ -221,16 +222,16 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         if (self.MOST_subprogram.marigram_points is not None) & (self.MOST_subprogram.marigram_points != []):
             self.action_marigrams.setEnabled(True)
 
-        self.action_select_points_on_heatmap.setEnabled(True)
+        # self.action_select_points_on_heatmap.setEnabled(True)
 
         # self.plot_widget.set_plot("heatmap")
         # self.setCentralWidget(self.plot_widget.get_widget())
 
         self.plot_widget.set_plot("bottom")
         self.setCentralWidget(self.plot_widget.get_widget())
-        self.open_results_dialog("heatmap", "Heatmap")
+        self.open_most_results_dialog("heatmap", "Heatmap")
 
-    def open_results_dialog(self, plot_name: str, dialog_title):
+    def open_most_results_dialog(self, plot_name: str, dialog_title):
         plot = self.MOST_subprogram.results_name_to_plot[plot_name]
         plot.update_canvas()
         if plot_name == "heatmap":
@@ -240,11 +241,23 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         # dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
         dialog.show()
 
+    def open_static_result_dialog(self):
+        plot = self.STATIC_subprogram.heatmap_with_contour_plot
+        plot.update_canvas()
+        dialog = PlotDialog(self, "STATIC heatmap", plot)
+        # dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
+        dialog.show()
+
     def get_marigram_points(self, plot_name: str):
         self.plot_widget.set_plot(plot_name)
         plot: HeatmapPlotBuilder = self.plot_widget.get_plot_by_name(plot_name)
         plot.clear_points()
         plot.clear_line()
+
+        dialog = MarigramsInfoDialog(self)
+        dialog.move(self.pos() + self.centralWidget().pos() * 5)
+        dialog.show()
+
         marigram_points = plot.get_input_points()
         plot.draw_points(marigram_points)
 
@@ -252,6 +265,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         if self.MOST_subprogram.calculated & (self.MOST_subprogram.marigram_points != []):
             self.action_marigrams.setEnabled(True)
+
+        dialog.close()
 
     def plot_marigrams(self):
         self.MOST_subprogram.plot_marigrams()
@@ -441,11 +456,11 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def show_static_results(self):
         self.plot_widget = self.STATIC_subprogram.plot_widget
-        self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
+        self.bottom_plot = HeatmapContourPlotBuilder(self.bottom_map, 10)
         self.MOST_subprogram.set_source_to_static()
         self.MOST_subprogram.draw_static_source(self.bottom_plot)
         self.plot_widget.add_plot("bottom", self.bottom_plot)
-        self.plot_widget.add_plot("static", self.STATIC_subprogram.heatmap_plot)
+        # self.plot_widget.add_plot("static", self.STATIC_subprogram.heatmap_plot)
         # self.plot_widget = PlotWidget({"bottom": self.MOST_subprogram.bottom_plot})
 
         self.static_settings_dialog.add_result_values(self.STATIC_subprogram.v0 / 1000000000,
@@ -453,12 +468,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                                       self.STATIC_subprogram.ets,
                                                       self.STATIC_subprogram.u_min,
                                                       self.STATIC_subprogram.u_max)
-
-        self.action_heatmap.setEnabled(True)
-        self.action_heatmap_with_contour.setEnabled(True)
-        self.action_3d_heatmap.setEnabled(True)
-        # self.action_wave_profile_bar_chart.setEnabled(True)
-        # self.action_draw_wave_profile.setEnabled(True)
 
         self.action_calculate_most_static.setEnabled(True)
         self.action_show_static.setEnabled(True)
@@ -493,9 +502,19 @@ class ErrorDialog(QtWidgets.QDialog, error_ui.Ui_Dialog):
         self.close()
 
 
+class MarigramsInfoDialog(QtWidgets.QDialog, marigrams_info_ui.Ui_Dialog):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setupUi(self)
+
+
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
+
+    time = datetime.now().strftime("%H:%M:%S:%f")
+    print(f"\n>> Starting ITMS  {time}")
     window = MOSTApp()
     window.showMaximized()
     # window.show()
+
     app.exec_()

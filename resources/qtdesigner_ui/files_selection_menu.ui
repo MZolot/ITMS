@@ -34,6 +34,12 @@
        </item>
        <item>
         <widget class="QPushButton" name="push_button_initial">
+         <property name="minimumSize">
+          <size>
+           <width>93</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="text">
           <string>Select file...</string>
          </property>
@@ -70,6 +76,12 @@
        </item>
        <item>
         <widget class="QPushButton" name="push_button_height">
+         <property name="minimumSize">
+          <size>
+           <width>93</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="text">
           <string>Select file...</string>
          </property>
@@ -106,6 +118,12 @@
        </item>
        <item>
         <widget class="QPushButton" name="push_button_max_height">
+         <property name="minimumSize">
+          <size>
+           <width>93</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="text">
           <string>Select file...</string>
          </property>

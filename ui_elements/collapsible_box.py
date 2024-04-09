@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 
 class CollapsibleBox(QtWidgets.QWidget):
@@ -17,8 +17,12 @@ class CollapsibleBox(QtWidgets.QWidget):
         # )
         self.content_area.setFrameShape(QtWidgets.QFrame.NoFrame)
 
+        font = QtGui.QFont()
+        font.setBold(True)
+        title_label = QtWidgets.QLabel(title)
+        title_label.setFont(font)
         title_layout = QtWidgets.QHBoxLayout()
-        title_layout.addWidget(QtWidgets.QLabel(title))
+        title_layout.addWidget(title_label)
         title_layout.addWidget(self.toggle_button)
         title_layout.setContentsMargins(0, 0, 0, 0)
         title_container = QtWidgets.QWidget()
