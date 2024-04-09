@@ -96,7 +96,6 @@
     <addaction name="action_marigrams"/>
     <addaction name="separator"/>
     <addaction name="menu_set_contour_lines_levels"/>
-    <addaction name="action_draw_wave_profile"/>
    </widget>
    <addaction name="menu_area"/>
    <addaction name="menu_source"/>
@@ -146,7 +145,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Wave profile</string>
+    <string>Coastal wave profile</string>
    </property>
   </action>
   <action name="action_marigrams">

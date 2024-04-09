@@ -4,9 +4,8 @@ from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
 from ui_elements.load_data_file_selection_dialog import FileSelectionMenuDialog
 from ui_elements.static_settings_dialog import StaticSettingsDialog
 from ui_elements.static_profile_dialog import StaticProfileDialog
-from ui_elements.most_results_dialog import MostResultsDialog
+from ui_elements.most_results_dialog import *
 
-from subprograms.subprogram_interface import SubprogramInterface
 from subprograms.most_interface import MOSTInterface
 from subprograms.static_interface import STATICInterface
 
@@ -124,10 +123,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.action_load_existing_results.triggered.connect(self.open_most_file_selection_menu)
 
-        self.action_set_contour_lines_levels_for_MOST.triggered.connect(
-            lambda: self.open_isoline_settings_menu(self.MOST_subprogram))
-        self.action_set_contour_lines_levels_for_STATIC.triggered.connect(
-            lambda: self.open_isoline_settings_menu(self.STATIC_subprogram))
+        self.action_set_contour_lines_levels_for_MOST.triggered.connect(self.open_isoline_settings_menu_for_most)
+        self.action_set_contour_lines_levels_for_STATIC.triggered.connect(self.open_isoline_settings_menu_for_static)
 
         self.action_static_source.triggered.connect(self.open_static_settings_dialog)
         self.action_show_static.triggered.connect(
@@ -165,7 +162,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_select_points_on_heatmap.triggered.connect(
             lambda: self.get_marigram_points("heatmap"))
 
-        self.action_draw_wave_profile.triggered.connect(self.draw_wave_profile_on_most)
+        # self.action_draw_wave_profile.triggered.connect(self.draw_wave_profile_on_most)
 
     def open_most_input_menu(self, element_names, title, menu_type=""):
         elements = []
@@ -185,9 +182,12 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             menu = InputMenuDialog(elements, title)
         menu.exec()
 
-    def open_isoline_settings_menu(self, subprogram: SubprogramInterface):
-        menu = IsolineSettingsDialog(subprogram.isoline_levels,
-                                     lambda: self.update_isoline_levels(subprogram))
+    def open_isoline_settings_menu_for_most(self):
+        menu = IsolineSettingsDialog(self.MOST_subprogram.isoline_levels, self.update_isoline_levels_for_most)
+        menu.exec()
+
+    def open_isoline_settings_menu_for_static(self):
+        menu = IsolineSettingsDialog(self.STATIC_subprogram.isoline_levels, self.update_isoline_levels_for_static)
         menu.exec()
 
     def open_most_file_selection_menu(self):
@@ -233,7 +233,10 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     def open_results_dialog(self, plot_name: str, dialog_title):
         plot = self.MOST_subprogram.results_name_to_plot[plot_name]
         plot.update_canvas()
-        dialog = MostResultsDialog(self, dialog_title, plot)
+        if plot_name == "heatmap":
+            dialog = HeatmapDialog(self, dialog_title, plot, self.show_most_wave_profile)
+        else:
+            dialog = PlotDialog(self, dialog_title, plot)
         # dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
         dialog.show()
 
@@ -254,25 +257,34 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.MOST_subprogram.plot_marigrams()
         self.plot_widget.set_plot("marigrams")
 
-    def draw_wave_profile_on_most(self):
-        self.plot_widget.set_plot("heatmap")
-        plot = self.plot_widget.get_plot_by_name("heatmap")
+    # def draw_wave_profile_on_most(self):
+    #     self.plot_widget.set_plot("heatmap")
+    #     plot = self.plot_widget.get_plot_by_name("heatmap")
+    #
+    #     plot.clear_points()  # убирает мареограммы
+    #     plot.clear_line()
+    #     self.wave_profile_end_points = plot.get_input_points(n=2)
+    #     if len(self.wave_profile_end_points) < 2:
+    #         return
+    #
+    #     plot.draw_line(self.wave_profile_end_points[0][0], self.wave_profile_end_points[0][1],
+    #                    self.wave_profile_end_points[1][0], self.wave_profile_end_points[1][1])
+    #
+    #     self.wave_profile_data = self.get_wave_profile_on_line(self.wave_profile_end_points,
+    #                                                            self.MOST_subprogram.max_height)
+    #     wave_profile_plot = BarPlotBuilder(self.wave_profile_data, self.save_wave_profile_data)
+    #
+    #     # wave_profile_plot = self.get_wave_profile(plot, self.MOST_subprogram.max_height)
+    #     self.plot_widget.add_plot("profile", wave_profile_plot)
 
-        plot.clear_points()  # убирает мареограммы
-        plot.clear_line()
-        self.wave_profile_end_points = plot.get_input_points(n=2)
-        if len(self.wave_profile_end_points) < 2:
-            return
-
-        plot.draw_line(self.wave_profile_end_points[0][0], self.wave_profile_end_points[0][1],
-                       self.wave_profile_end_points[1][0], self.wave_profile_end_points[1][1])
-
+    def show_most_wave_profile(self, heatmap_dialog, wave_profile_end_points):
+        self.wave_profile_end_points = wave_profile_end_points
         self.wave_profile_data = self.get_wave_profile_on_line(self.wave_profile_end_points,
                                                                self.MOST_subprogram.max_height)
         wave_profile_plot = BarPlotBuilder(self.wave_profile_data, self.save_wave_profile_data)
 
-        # wave_profile_plot = self.get_wave_profile(plot, self.MOST_subprogram.max_height)
-        self.plot_widget.add_plot("profile", wave_profile_plot)
+        dialog = PlotDialog(heatmap_dialog, "Wave profile", wave_profile_plot)
+        dialog.show()
 
     def draw_wave_profile_on_static(self, draw_profile_callback):
         self.plot_widget.set_plot("bottom")
@@ -359,15 +371,26 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         return data
 
-    def update_isoline_levels(self, subprogram: SubprogramInterface):
-        if not subprogram.calculated:
+    def update_isoline_levels_for_most(self):
+        if not self.MOST_subprogram.calculated:
             return
 
-        subprogram.heatmap_with_contour_plot = HeatmapContourPlotBuilder(subprogram.isoline_plot_data,
-                                                                         levels=subprogram.isoline_levels,
-                                                                         use_default_cmap=False)
-        subprogram.plot_widget.add_plot("heatmap contour", subprogram.heatmap_with_contour_plot)
-        subprogram.plot_widget.set_plot("heatmap contour")
+        heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.MOST_subprogram.isoline_plot_data,
+                                                              levels=self.MOST_subprogram.isoline_levels,
+                                                              use_default_cmap=False)
+
+        self.MOST_subprogram.results_name_to_plot["heatmap contour"] = heatmap_with_contour_plot
+        # subprogram.plot_widget.add_plot("heatmap contour", subprogram.heatmap_with_contour_plot)
+        # subprogram.plot_widget.set_plot("heatmap contour")
+
+    def update_isoline_levels_for_static(self):
+        if not self.STATIC_subprogram.calculated:
+            return
+
+        self.STATIC_subprogram.heatmap_with_contour_plot = HeatmapContourPlotBuilder(
+            self.STATIC_subprogram.isoline_plot_data,
+            levels=self.STATIC_subprogram.isoline_levels,
+            use_default_cmap=False)
 
     def open_save_file_dialog(self):
         options = QtWidgets.QFileDialog.Options()

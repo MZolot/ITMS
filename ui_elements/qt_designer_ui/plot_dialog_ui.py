@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\most_results_dialog.ui'
+# Form implementation generated from reading ui file '.\plot_dialog.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(497, 392)
+        Dialog.resize(705, 500)
         self.vertical_layout = QtWidgets.QVBoxLayout(Dialog)
         self.vertical_layout.setObjectName("vertical_layout")
         self.buttons_widget = QtWidgets.QWidget(Dialog)
