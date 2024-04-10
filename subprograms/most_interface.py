@@ -20,7 +20,6 @@ class MOSTInterface(SubprogramInterface):
     def __init__(self,
                  config_file_name,
                  subprogram_directory,
-                 subprogram_with_static_directory,
                  subprogram_file_names,
                  bottom_plot: HeatmapPlotBuilder,
                  save_wave_profile_callback,
@@ -52,14 +51,9 @@ class MOSTInterface(SubprogramInterface):
         self.max_height = None
         self.results_name_to_plot: dict[str, PlotBuilder] = {}
 
-        self.working_directory_with_static = subprogram_with_static_directory
-        self.program_with_static_file_names = super().add_directory_to_file_names(subprogram_with_static_directory,
-                                                                                  subprogram_file_names)
         self.static: STATICInterface = static
 
         self.elliptical_source: bool = True
-        self.current_directory = self.working_directory
-        self.current_program_file_names = self.program_file_names
         self.x_multiplier: int = 1
         self.y_multiplier: int = 1
         self.static_start_x = None
@@ -88,7 +82,7 @@ class MOSTInterface(SubprogramInterface):
         return m_corr & n_corr
 
     def save_parameters(self):
-        ini_data_file = open(self.current_program_file_names["initial"], "w")
+        ini_data_file = open(self.program_file_names["initial"], "w")
 
         if not self.elliptical_source:
             self.ini_data_elements["center x"].set_current_value(self.static.ini_data_elements["x"].get_current_value())
@@ -103,25 +97,25 @@ class MOSTInterface(SubprogramInterface):
         if not self.elliptical_source:
             print(">> Saving MOST parameters: STATIC source")
             self.print_scaled_static()
-            static_x = self.static.ini_data_elements["M1"].get_current_value() * self.x_multiplier
-            static_y = self.static.ini_data_elements["N1"].get_current_value() * self.y_multiplier
-            input_data = str(static_x) + "  --  statik X size\n" + str(static_y) + "  --  statik Y size\n"
-            ini_data_file.write(input_data)
+            static_x = int(self.static.ini_data_elements["M1"].get_current_value() * self.x_multiplier)
+            static_y = int(self.static.ini_data_elements["N1"].get_current_value() * self.y_multiplier)
+        else:
+            static_x = 0
+            static_y = 0
+
+        input_data = str(static_x) + "  --  statik X size\n" + str(static_y) + "  --  statik Y size\n"
+        ini_data_file.write(input_data)
 
         ini_data_file.close()
 
     def set_source_to_ellipse(self):
         print(">> Set elliptical source")
         self.elliptical_source = True
-        self.current_directory = self.working_directory
-        self.current_program_file_names = self.program_file_names
         self.ini_data_elements["max elevation"].reset_value()
 
     def set_source_to_static(self):
         print(">> Set STATIC source")
         self.elliptical_source = False
-        self.current_directory = self.working_directory_with_static
-        self.current_program_file_names = self.program_with_static_file_names
         self.ini_data_elements["center x"].set_current_value(self.static.ini_data_elements["x"].get_current_value())
         self.ini_data_elements["center y"].set_current_value(self.static.ini_data_elements["y"].get_current_value())
         self.ini_data_elements["max elevation"].set_current_value(0)
@@ -155,7 +149,7 @@ class MOSTInterface(SubprogramInterface):
         x_step = 0
         y_step = 0
 
-        f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
+        f_out = open(self.working_directory + "\\static.txt", "w")
         for j in range(0, n):
             while y_step < self.y_multiplier:
                 for i in range(0, m):
@@ -188,10 +182,10 @@ class MOSTInterface(SubprogramInterface):
         else:
             print(">> Starting MOST with elliptical source")
 
-        commands = self.current_program_file_names["exe"]
+        commands = self.program_file_names["exe"]
 
         self.process = QProcess()
-        self.process.setWorkingDirectory(self.current_directory)
+        self.process.setWorkingDirectory(self.working_directory)
         self.process.readyReadStandardOutput.connect(self.update_progress)
         self.process.finished.connect(self.load_results)
         self.process.start(commands)
@@ -231,7 +225,7 @@ class MOSTInterface(SubprogramInterface):
 
         self.thread = QThread()
         self.loader = FileLoader(
-            [self.current_program_file_names["max_height"], self.current_program_file_names["height"]])
+            [self.program_file_names["max_height"], self.program_file_names["height"]])
         self.loader.moveToThread(self.thread)
         self.thread.started.connect(self.loader.run)
         self.loader.finished.connect(self.thread.quit)
@@ -253,8 +247,8 @@ class MOSTInterface(SubprogramInterface):
         loaded_files = self.loader.get_results()
         # if self.program_file_names["initial"] != self.program_file_names["default_initial"]:
         #     self.parse_parameters()
-        self.max_height = loaded_files[self.current_program_file_names["max_height"]]
-        self.height = loaded_files[self.current_program_file_names["height"]]
+        self.max_height = loaded_files[self.program_file_names["max_height"]]
+        self.height = loaded_files[self.program_file_names["height"]]
 
         self.isoline_plot_data = self.max_height
         self.bar_chart_data = self.max_height[3]
@@ -303,7 +297,7 @@ class MOSTInterface(SubprogramInterface):
     def draw_static_source(self, plot: HeatmapPlotBuilder):
         plot.clear_contour()
         plot.clear_rectangle()
-        z = np.loadtxt("subprograms\\MOST_with_STATIC\\static.txt")
+        z = np.loadtxt(self.working_directory + "\\static.txt")
 
         m = int(self.static.ini_data_elements["M1"].get_current_value() * self.x_multiplier)
         n = int(self.static.ini_data_elements["N1"].get_current_value() * self.y_multiplier)

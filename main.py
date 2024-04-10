@@ -16,7 +16,7 @@ from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            BarPlotBuilder,
                                            CommonPlotBuilder)
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 
 import numpy as np
 
@@ -63,7 +63,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                                  show_results_callback=self.show_static_results)
 
         self.most_files = {
-            "exe": "wave_1500x900_01.exe",
+            "exe": "wave_1500x900_08.exe",
             "initial": "ini_data.txt",
             "height": "heigh.dat",
             "max_height": "maxheigh.dat"
@@ -71,7 +71,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.MOST_subprogram = MOSTInterface(config_file_name=most_config_file_name,
                                              subprogram_directory="subprograms\\MOST",
-                                             subprogram_with_static_directory="subprograms\\MOST_with_STATIC",
                                              subprogram_file_names=self.most_files,
                                              bottom_plot=self.bottom_plot,
                                              save_wave_profile_callback=self.save_wave_profile_data,
@@ -80,13 +79,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                              show_loading_screen_callback=self.show_loading_screen,
                                              show_results_callback=self.show_most_result,
                                              static=self.STATIC_subprogram)
-
-        self.most_with_static_files = {
-            "exe": "wave_1500x900_01_04.exe",
-            "initial": "ini_data.txt",
-            "height": "heigh.dat",
-            "max_height": "maxheigh.dat"
-        }
 
         self.plot_widget = PlotWidget({"bottom": self.MOST_subprogram.bottom_plot})
 
@@ -512,7 +504,7 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
 
     time = datetime.now().strftime("%H:%M:%S:%f")
-    print(f"\n>> Starting ITMS  {time}")
+    print(f"\n>> Started ITMS  {time}")
     window = MOSTApp()
     window.showMaximized()
     # window.show()
