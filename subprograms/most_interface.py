@@ -108,6 +108,9 @@ class MOSTInterface(SubprogramInterface):
 
         ini_data_file.close()
 
+        print(">> Saving MOST parameters: marigram points")
+        self.print_marigram_points()
+
     def set_source_to_ellipse(self):
         print(">> Set elliptical source")
         self.elliptical_source = True
@@ -169,6 +172,15 @@ class MOSTInterface(SubprogramInterface):
         #     f_out.write("\n")
         # f_out.close()
 
+    def print_marigram_points(self):
+        n = len(self.marigram_points)
+
+        f_out = open(self.working_directory + "\\points.txt", "w")
+        f_out.write(str(n) + "\n")
+        for point in self.marigram_points:
+            f_out.write(f"{int(point[0])} {int(point[1])}\n")
+        f_out.close()
+
     def start_subprogram(self, error_callback):
         # TODO: это должно работать, только если программа запущена в первый раз, или если данные изменились
         if not self.check_parameters_correctness():
@@ -222,6 +234,7 @@ class MOSTInterface(SubprogramInterface):
         self.show_loading_screen_callback()
 
         self.parse_parameters()
+        self.load_marigrams()
 
         self.thread = QThread()
         self.loader = FileLoader(
@@ -233,6 +246,21 @@ class MOSTInterface(SubprogramInterface):
         self.thread.finished.connect(self.thread.deleteLater)
         self.thread.finished.connect(self.visualise_results)
         self.thread.start()
+
+    def load_marigrams(self):
+        time = datetime.now().strftime("%H:%M:%S:%f")
+        print(f">> Loading marigrams  {time}")
+        self.marigrams_plot_data = []
+
+        for i in range(len(self.marigram_points)):
+            self.marigrams_plot_data.append([])
+
+        f = open(self.working_directory + "\\mareo.dat", 'r')
+        for line in f:
+            vals = line.split()
+            for i, val in enumerate(vals):
+                self.marigrams_plot_data[i].append(float(val))
+        f.close()
 
     def get_loading_screen(self):
         loading_screen = LoadingScreen()
@@ -271,6 +299,9 @@ class MOSTInterface(SubprogramInterface):
         self.results_name_to_plot["heatmap contour"] = self.heatmap_with_contour_plot
         self.results_name_to_plot["heatmap 3d"] = self.heatmap_3d_plot
         self.results_name_to_plot["profile"] = self.wave_profile_plot
+
+        if len(self.marigram_points) > 0:
+            self.plot_marigrams()
 
         self.show_results_callback()
 
@@ -314,29 +345,31 @@ class MOSTInterface(SubprogramInterface):
         steps_total = self.ini_data_elements["number of time steps"].get_current_value()
         steps_between = self.ini_data_elements[
             "number of steps between surface output"].get_current_value()
-        for i in range(0, steps_total, steps_between):
+        # for i in range(0, steps_total, steps_between):
+        for i in range(0, steps_total):
             x.append(i * time_step)
 
         print(">>> Marigram points:")
         for point in self.marigram_points:
             print("     " + str(point))
-        self.marigrams_plot_data = []
-        n_marigrams = len(self.marigram_points)
-        length = len(self.height)
-        y_size = self.ini_data_elements["y-size"].get_current_value()
-
-        for i in range(n_marigrams):
-            point = self.marigram_points[i]
-            start_y = int(point[1])
-            if start_y == y_size:
-                start_y = y_size - 1
-            selected = self.height[[y for y in range(start_y, length, y_size)], int(point[0])]
-            self.marigrams_plot_data.append(selected.tolist())
+        # self.marigrams_plot_data = []
+        # n_marigrams = len(self.marigram_points)
+        # length = len(self.height)
+        # y_size = self.ini_data_elements["y-size"].get_current_value()
+        #
+        # for i in range(n_marigrams):
+        #     point = self.marigram_points[i]
+        #     start_y = int(point[1])
+        #     if start_y == y_size:
+        #         start_y = y_size - 1
+        #     selected = self.height[[y for y in range(start_y, length, y_size)], int(point[0])]
+        #     self.marigrams_plot_data.append(selected.tolist())
 
         self.marigrams_plot = MarigramsPlotBuilder(x, self.marigrams_plot_data, self.marigram_points,
                                                    self.save_marigrams)
         self.plot_widget.add_plot("marigrams", self.marigrams_plot)
-        self.plot_widget.set_plot("marigrams")
+        # self.plot_widget.set_plot("marigrams")
+        self.results_name_to_plot["marigrams"] = self.marigrams_plot
 
     def most_coordinates_to_static_coordinates(self, most_x, most_y):
         m = int(self.static.ini_data_elements["M1"].get_current_value())
@@ -355,3 +388,10 @@ class MOSTInterface(SubprogramInterface):
             static_y = n - 1
 
         return static_x, static_y
+
+    def get_plot(self, plot_name):
+        if not self.results_name_to_plot.keys().__contains__(plot_name):
+            print(f"No such plot: {plot_name} in MOST plot results")
+            return None
+
+        return self.results_name_to_plot[plot_name]

@@ -111,9 +111,9 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.action_show_area.triggered.connect(
             lambda: self.plot_widget.set_plot("bottom"))
 
-        self.action_select_points_on_area.triggered.connect(
-            lambda: self.get_marigram_points("bottom"))
-        self.action_marigrams.triggered.connect(self.plot_marigrams)
+        # self.action_select_points_on_area.triggered.connect(
+        #     lambda: self.get_marigram_points("bottom"))
+        self.action_select_marigram_points.triggered.connect(self.get_marigram_points)
 
         self.action_load_existing_results.triggered.connect(self.open_most_file_selection_menu)
 
@@ -152,8 +152,13 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
             lambda: self.open_most_results_dialog("profile", "Wave profile")
         )
 
-        self.action_select_points_on_heatmap.triggered.connect(
-            lambda: self.get_marigram_points("heatmap"))
+        # self.action_marigrams.triggered.connect(self.plot_marigrams)
+        self.action_marigrams.triggered.connect(
+            lambda: self.open_most_results_dialog("marigrams", "Marigrams")
+        )
+
+        # self.action_select_points_on_heatmap.triggered.connect(
+        #     lambda: self.get_marigram_points("heatmap"))
 
         # self.action_draw_wave_profile.triggered.connect(self.draw_wave_profile_on_most)
 
@@ -224,7 +229,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.open_most_results_dialog("heatmap", "Heatmap")
 
     def open_most_results_dialog(self, plot_name: str, dialog_title):
-        plot = self.MOST_subprogram.results_name_to_plot[plot_name]
+        plot = self.MOST_subprogram.get_plot(plot_name)
         plot.update_canvas()
         if plot_name == "heatmap":
             dialog = HeatmapDialog(self, dialog_title, plot, self.show_most_wave_profile)
@@ -240,9 +245,29 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         # dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
         dialog.show()
 
-    def get_marigram_points(self, plot_name: str):
-        self.plot_widget.set_plot(plot_name)
-        plot: HeatmapPlotBuilder = self.plot_widget.get_plot_by_name(plot_name)
+    # def get_marigram_points(self, plot_name: str):
+    #     self.plot_widget.set_plot(plot_name)
+    #     plot: HeatmapPlotBuilder = self.plot_widget.get_plot_by_name(plot_name)
+    #     plot.clear_points()
+    #     plot.clear_line()
+    #
+    #     dialog = MarigramsInfoDialog(self)
+    #     dialog.move(self.pos() + self.centralWidget().pos() * 5)
+    #     dialog.show()
+    #
+    #     marigram_points = plot.get_input_points()
+    #     plot.draw_points(marigram_points)
+    #
+    #     self.MOST_subprogram.marigram_points = marigram_points
+    #
+    #     if self.MOST_subprogram.calculated & (self.MOST_subprogram.marigram_points != []):
+    #         self.action_marigrams.setEnabled(True)
+    #
+    #     dialog.close()
+
+    def get_marigram_points(self):  # TODO
+        # self.plot_widget.set_plot(plot_name)
+        plot: HeatmapPlotBuilder = self.plot_widget.get_plot_by_name("bottom")
         plot.clear_points()
         plot.clear_line()
 

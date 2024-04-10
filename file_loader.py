@@ -20,7 +20,7 @@ class FileLoader(QObject):
             self.loading_results[f] = res
             # self.progress.emit(i + 1)
         time = datetime.now().strftime("%H:%M:%S:%f")
-        print(f">> Loading finished  {time}")
+        print(f">> Loading finished  {time}\n")
         self.finished.emit()
 
     def get_results(self):

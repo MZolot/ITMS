@@ -59,14 +59,7 @@
     <property name="title">
      <string>Marigrams</string>
     </property>
-    <widget class="QMenu" name="menu_select_points">
-     <property name="title">
-      <string>Select points...</string>
-     </property>
-     <addaction name="action_select_points_on_area"/>
-     <addaction name="action_select_points_on_heatmap"/>
-    </widget>
-    <addaction name="menu_select_points"/>
+    <addaction name="action_select_marigram_points"/>
    </widget>
    <widget class="QMenu" name="menu_calculations">
     <property name="title">
@@ -107,16 +100,6 @@
   <action name="action_size">
    <property name="text">
     <string>Size...</string>
-   </property>
-  </action>
-  <action name="action_steps">
-   <property name="text">
-    <string>Steps...</string>
-   </property>
-  </action>
-  <action name="action_source_parameters">
-   <property name="text">
-    <string>Change elliptical source parameters...</string>
    </property>
   </action>
   <action name="action_calculate_most">
@@ -161,11 +144,6 @@
     <string>Calculation parameters...</string>
    </property>
   </action>
-  <action name="actionArea">
-   <property name="text">
-    <string>Area</string>
-   </property>
-  </action>
   <action name="action_show_area">
    <property name="text">
     <string>Show Area</string>
@@ -195,19 +173,6 @@
     <string>Load existing MOST results...</string>
    </property>
   </action>
-  <action name="action_select_points_on_area">
-   <property name="text">
-    <string>On area</string>
-   </property>
-  </action>
-  <action name="action_select_points_on_heatmap">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>On heatmap</string>
-   </property>
-  </action>
   <action name="action_default">
    <property name="text">
     <string>Default</string>
@@ -221,11 +186,6 @@
     <string>Draw wave profile</string>
    </property>
   </action>
-  <action name="action_static">
-   <property name="text">
-    <string>Run STATIC</string>
-   </property>
-  </action>
   <action name="action_set_contour_lines_levels_for_MOST">
    <property name="text">
     <string>For MOST</string>
@@ -234,22 +194,6 @@
   <action name="action_set_contour_lines_levels_for_STATIC">
    <property name="text">
     <string>For STATIC</string>
-   </property>
-  </action>
-  <action name="action_change_source">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Switch source to STATIC</string>
-   </property>
-  </action>
-  <action name="action_calculate_most_static">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Run MOST with STATIC source</string>
    </property>
   </action>
   <action name="action_elliptical_source">
@@ -276,6 +220,11 @@
    </property>
    <property name="text">
     <string>Draw STATIC profile</string>
+   </property>
+  </action>
+  <action name="action_select_marigram_points">
+   <property name="text">
+    <string>Select points</string>
    </property>
   </action>
  </widget>
