@@ -96,6 +96,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.setCentralWidget(self.plot_widget.get_widget())
 
     def set_actions(self):
+        self.action_load_existing_results.setEnabled(False)  # TODO: fix loading (marigrams issue)
+
         self.action_size.triggered.connect(
             lambda: self.open_most_input_menu(self.MOST_subprogram.input_menu_to_elements["size"],
                                               "Size parameters", "size"))
@@ -265,7 +267,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
     #
     #     dialog.close()
 
-    def get_marigram_points(self):  # TODO
+    def get_marigram_points(self):
         # self.plot_widget.set_plot(plot_name)
         plot: HeatmapPlotBuilder = self.plot_widget.get_plot_by_name("bottom")
         plot.clear_points()
@@ -486,7 +488,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                                       self.STATIC_subprogram.u_min,
                                                       self.STATIC_subprogram.u_max)
 
-        self.action_calculate_most_static.setEnabled(True)
+        # self.action_calculate_most_static.setEnabled(True)
         self.action_show_static.setEnabled(True)
         self.action_draw_static_profile.setEnabled(True)
 

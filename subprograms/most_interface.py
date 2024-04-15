@@ -47,7 +47,7 @@ class MOSTInterface(SubprogramInterface):
         self.isoline_levels = [0.005, 0.01, 0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1]
 
         self.steps_calculated: int = 0
-        self.height = None
+        # self.height = None
         self.max_height = None
         self.results_name_to_plot: dict[str, PlotBuilder] = {}
 
@@ -237,8 +237,10 @@ class MOSTInterface(SubprogramInterface):
         self.load_marigrams()
 
         self.thread = QThread()
-        self.loader = FileLoader(
-            [self.program_file_names["max_height"], self.program_file_names["height"]])
+        self.loader = FileLoader([
+            self.program_file_names["max_height"]
+            # self.program_file_names["height"]
+        ])
         self.loader.moveToThread(self.thread)
         self.thread.started.connect(self.loader.run)
         self.loader.finished.connect(self.thread.quit)
@@ -276,7 +278,7 @@ class MOSTInterface(SubprogramInterface):
         # if self.program_file_names["initial"] != self.program_file_names["default_initial"]:
         #     self.parse_parameters()
         self.max_height = loaded_files[self.program_file_names["max_height"]]
-        self.height = loaded_files[self.program_file_names["height"]]
+        # self.height = loaded_files[self.program_file_names["height"]]
 
         self.isoline_plot_data = self.max_height
         self.bar_chart_data = self.max_height[3]
@@ -284,6 +286,7 @@ class MOSTInterface(SubprogramInterface):
         self.calculated = True
 
         self.heatmap_plot = HeatmapPlotBuilder(self.max_height, default_cmap=False)
+        self.heatmap_plot.draw_points(self.marigram_points)
         self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.max_height,
                                                                    levels=self.isoline_levels,
                                                                    use_default_cmap=False)
@@ -343,8 +346,8 @@ class MOSTInterface(SubprogramInterface):
         x = []
         time_step = self.ini_data_elements["time step"].get_current_value()
         steps_total = self.ini_data_elements["number of time steps"].get_current_value()
-        steps_between = self.ini_data_elements[
-            "number of steps between surface output"].get_current_value()
+        # steps_between = self.ini_data_elements[
+        #     "number of steps between surface output"].get_current_value()
         # for i in range(0, steps_total, steps_between):
         for i in range(0, steps_total):
             x.append(i * time_step)
