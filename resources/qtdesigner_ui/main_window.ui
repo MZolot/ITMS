@@ -31,7 +31,10 @@
      <property name="title">
       <string>Bottom profile...</string>
      </property>
-     <addaction name="action_default"/>
+     <addaction name="action_profile_default"/>
+     <addaction name="action_profile_koryto"/>
+     <addaction name="action_profile_flat"/>
+     <addaction name="action_profile_tilted"/>
     </widget>
     <addaction name="menu_bottom_profile"/>
     <addaction name="separator"/>
@@ -173,7 +176,7 @@
     <string>Load existing MOST results...</string>
    </property>
   </action>
-  <action name="action_default">
+  <action name="action_profile_default">
    <property name="text">
     <string>Default</string>
    </property>
@@ -225,6 +228,21 @@
   <action name="action_select_marigram_points">
    <property name="text">
     <string>Select points</string>
+   </property>
+  </action>
+  <action name="action_profile_koryto">
+   <property name="text">
+    <string>Koryto</string>
+   </property>
+  </action>
+  <action name="action_profile_flat">
+   <property name="text">
+    <string>Flat...</string>
+   </property>
+  </action>
+  <action name="action_profile_tilted">
+   <property name="text">
+    <string>Tilted...</string>
    </property>
   </action>
  </widget>
