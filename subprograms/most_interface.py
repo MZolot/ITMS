@@ -21,7 +21,7 @@ class MOSTInterface(SubprogramInterface):
                  config_file_name,
                  subprogram_directory,
                  subprogram_file_names,
-                 bottom_plot: HeatmapPlotBuilder,
+                 bottom_profile,
                  save_wave_profile_callback,
                  save_marigrams_callback,
                  show_calculation_screen_callback,
@@ -36,9 +36,10 @@ class MOSTInterface(SubprogramInterface):
         self.show_results_callback = show_results_callback
 
         self.load_initial_data(config_file_name)
+        self.elliptical_source: bool = True
 
-        self.bottom_plot = bottom_plot
-        self.plot_widget.add_plot("bottom", self.bottom_plot)
+        self.plot_name_to_builder: dict[str, PlotBuilder] = {}
+        self.bottom_profile = bottom_profile
 
         self.marigram_points = []
         self.marigrams_plot_data = []
@@ -49,15 +50,17 @@ class MOSTInterface(SubprogramInterface):
         self.steps_calculated: int = 0
         # self.height = None
         self.max_height = None
-        self.results_name_to_plot: dict[str, PlotBuilder] = {}
 
         self.static: STATICInterface = static
 
-        self.elliptical_source: bool = True
         self.x_multiplier: int = 1
         self.y_multiplier: int = 1
         self.static_start_x = None
         self.static_start_y = None
+
+    def set_bottom_profile(self, bottom_profile):
+        self.bottom_profile = bottom_profile
+        # Might add area size adjustments here
 
     def load_initial_data(self, config_file_name):
         super().load_initial_data(config_file_name)
@@ -66,7 +69,7 @@ class MOSTInterface(SubprogramInterface):
             "area": ["x-size", "y-size", "x-step", "y-step", "lowest depth"],
             "size": ["x-size", "y-size", "x-step", "y-step"],
             "source": ["max elevation", "ellipse half x length", "ellipse half y length",
-                       "center x", "center y", "lowest depth"],
+                       "center x", "center y"],
             "calculation": ["time step", "number of time steps", "number of steps between surface output"]
         }
 
@@ -109,7 +112,13 @@ class MOSTInterface(SubprogramInterface):
         ini_data_file.close()
 
         print(">> Saving MOST parameters: marigram points")
-        self.print_marigram_points()
+        self.save_marigram_points()
+
+        print(">> Saving bottom profile")
+        profile_file = open(self.program_file_names["profile"], "w")
+        for x in self.bottom_profile:
+            profile_file.write(str(int(x)) + '\n')
+        profile_file.close()
 
     def set_source_to_ellipse(self):
         print(">> Set elliptical source")
@@ -172,7 +181,7 @@ class MOSTInterface(SubprogramInterface):
         #     f_out.write("\n")
         # f_out.close()
 
-    def print_marigram_points(self):
+    def save_marigram_points(self):
         n = len(self.marigram_points)
 
         f_out = open(self.working_directory + "\\points.txt", "w")
@@ -275,8 +284,6 @@ class MOSTInterface(SubprogramInterface):
         self.plot_widget = PlotWidget()
 
         loaded_files = self.loader.get_results()
-        # if self.program_file_names["initial"] != self.program_file_names["default_initial"]:
-        #     self.parse_parameters()
         self.max_height = loaded_files[self.program_file_names["max_height"]]
         # self.height = loaded_files[self.program_file_names["height"]]
 
@@ -293,15 +300,15 @@ class MOSTInterface(SubprogramInterface):
         self.heatmap_3d_plot = Heatmap3DPlotBuilder(self.max_height)
         self.wave_profile_plot = BarPlotBuilder(self.bar_chart_data, self.save_wave_profile)
 
-        self.plot_widget.add_plot("heatmap", self.heatmap_plot)
-        self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
-        self.plot_widget.add_plot("heatmap 3d", self.heatmap_3d_plot)
-        self.plot_widget.add_plot("profile", self.wave_profile_plot)
+        # self.plot_widget.add_plot("heatmap", self.heatmap_plot)
+        # self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
+        # self.plot_widget.add_plot("heatmap 3d", self.heatmap_3d_plot)
+        # self.plot_widget.add_plot("profile", self.wave_profile_plot)
 
-        self.results_name_to_plot["heatmap"] = self.heatmap_plot
-        self.results_name_to_plot["heatmap contour"] = self.heatmap_with_contour_plot
-        self.results_name_to_plot["heatmap 3d"] = self.heatmap_3d_plot
-        self.results_name_to_plot["profile"] = self.wave_profile_plot
+        self.plot_name_to_builder["heatmap"] = self.heatmap_plot
+        self.plot_name_to_builder["heatmap contour"] = self.heatmap_with_contour_plot
+        self.plot_name_to_builder["heatmap 3d"] = self.heatmap_3d_plot
+        self.plot_name_to_builder["profile"] = self.wave_profile_plot
 
         if len(self.marigram_points) > 0:
             self.plot_marigrams()
@@ -312,8 +319,8 @@ class MOSTInterface(SubprogramInterface):
         if self.elliptical_source:
             self.draw_elliptical_source(plot)
         else:
-            # pass
             self.draw_static_source(plot)
+        # plot.update_canvas()
 
     def draw_elliptical_source(self, plot: HeatmapPlotBuilder):
         plot.clear_contour()
@@ -346,33 +353,18 @@ class MOSTInterface(SubprogramInterface):
         x = []
         time_step = self.ini_data_elements["time step"].get_current_value()
         steps_total = self.ini_data_elements["number of time steps"].get_current_value()
-        # steps_between = self.ini_data_elements[
-        #     "number of steps between surface output"].get_current_value()
-        # for i in range(0, steps_total, steps_between):
         for i in range(0, steps_total):
             x.append(i * time_step)
 
         print(">>> Marigram points:")
         for point in self.marigram_points:
             print("     " + str(point))
-        # self.marigrams_plot_data = []
-        # n_marigrams = len(self.marigram_points)
-        # length = len(self.height)
-        # y_size = self.ini_data_elements["y-size"].get_current_value()
-        #
-        # for i in range(n_marigrams):
-        #     point = self.marigram_points[i]
-        #     start_y = int(point[1])
-        #     if start_y == y_size:
-        #         start_y = y_size - 1
-        #     selected = self.height[[y for y in range(start_y, length, y_size)], int(point[0])]
-        #     self.marigrams_plot_data.append(selected.tolist())
 
         self.marigrams_plot = MarigramsPlotBuilder(x, self.marigrams_plot_data, self.marigram_points,
                                                    self.save_marigrams)
         self.plot_widget.add_plot("marigrams", self.marigrams_plot)
         # self.plot_widget.set_plot("marigrams")
-        self.results_name_to_plot["marigrams"] = self.marigrams_plot
+        self.plot_name_to_builder["marigrams"] = self.marigrams_plot
 
     def most_coordinates_to_static_coordinates(self, most_x, most_y):
         m = int(self.static.ini_data_elements["M1"].get_current_value())
@@ -393,8 +385,8 @@ class MOSTInterface(SubprogramInterface):
         return static_x, static_y
 
     def get_plot(self, plot_name):
-        if not self.results_name_to_plot.keys().__contains__(plot_name):
+        if not self.plot_name_to_builder.keys().__contains__(plot_name):
             print(f"No such plot: {plot_name} in MOST plot results")
             return None
 
-        return self.results_name_to_plot[plot_name]
+        return self.plot_name_to_builder[plot_name]

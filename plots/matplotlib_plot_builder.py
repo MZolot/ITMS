@@ -39,7 +39,7 @@ class PlotBuilder:
 
 
 class HeatmapPlotBuilder(PlotBuilder):
-    def __init__(self, plot_data, default_cmap=True):
+    def __init__(self, plot_data, default_cmap: bool = True):
         super().__init__()
         self.lines = []
         self.scatter_points: list = []
@@ -100,8 +100,12 @@ class HeatmapPlotBuilder(PlotBuilder):
     def clear_elliptical_source(self):
         if self.source_center:
             self.source_center[0].remove()
+            # self.figure.canvas.draw()
+            # self.figure.canvas.flush_events()
         if self.ellipse:
             self.ellipse.remove()
+            # self.figure.canvas.draw()
+            # self.figure.canvas.flush_events()
 
     def clear_points(self):
         if len(self.scatter_points) > 0:
@@ -122,10 +126,15 @@ class HeatmapPlotBuilder(PlotBuilder):
     def clear_rectangle(self):
         if self.rectangle:
             self.rectangle.remove()
+            # self.figure.canvas.draw()
+            # self.figure.canvas.flush_events()
 
     def clear_contour(self):
         if self.source_contour is not None:
             self.source_contour.remove()
+            # self.source_contour = None
+            # self.figure.canvas.draw()
+            # self.figure.canvas.flush_events()
 
     def clear_everything(self):
         self.clear_rectangle()
