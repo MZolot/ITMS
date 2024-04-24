@@ -73,5 +73,6 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(_translate("Dialog", "Bottom profile"))
         self.label_depth.setText(_translate("Dialog", "Depth (m): "))
         self.label_length.setText(_translate("Dialog", "Length:"))
+        self.line_edit_length.setPlaceholderText(_translate("Dialog", "900"))
         self.push_button_ok.setText(_translate("Dialog", "OK"))
         self.push_button_cancel.setText(_translate("Dialog", "Cancel"))

@@ -124,6 +124,12 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         # self.action_show_area.triggered.connect(
         #     lambda: self.plot_widget.set_plot("bottom"))
 
+        self.action_profile_default.triggered.connect(
+            lambda: self.set_bottom_profile(self.koryto_profile)
+        )
+        self.action_profile_koryto.triggered.connect(
+            lambda: self.set_bottom_profile(self.koryto_profile)
+        )
         self.action_profile_flat.triggered.connect(
             lambda: self.open_bottom_profile_dialog("flat")
         )
@@ -169,7 +175,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         if profile_type == "flat":
             dialog = BottomProfileFlatDialog(self, self.set_bottom_profile)
         elif profile_type == "complex":
-            dialog = BottomProfileComplexDialog(self, print)
+            dialog = BottomProfileComplexDialog(self, self.set_bottom_profile)
         else:
             print("incorrect bottom profile type: " + profile_type)
             return
@@ -177,7 +183,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         dialog.show()
 
     def set_bottom_profile(self, profile):
-        # print(profile)
         self.bottom_profile = profile
         self.bottom_map = np.transpose(np.tile(self.bottom_profile, (1500, 1)))
         self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
