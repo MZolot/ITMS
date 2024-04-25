@@ -194,6 +194,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.plot_widget.set_plot("bottom")
 
         self.MOST_subprogram.set_bottom_profile(self.bottom_profile)
+        self.open_bottom_profile_plot_dialog(self.bottom_profile)
 
     def set_koryto_profile(self):
         f = open("last_used_profile.txt", 'w')
@@ -306,25 +307,12 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         # dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
         dialog.show()
 
-    # def get_marigram_points(self, plot_name: str):
-    #     self.plot_widget.set_plot(plot_name)
-    #     plot: HeatmapPlotBuilder = self.plot_widget.get_plot_by_name(plot_name)
-    #     plot.clear_points()
-    #     plot.clear_line()
-    #
-    #     dialog = MarigramsInfoDialog(self)
-    #     dialog.move(self.pos() + self.centralWidget().pos() * 5)
-    #     dialog.show()
-    #
-    #     marigram_points = plot.get_input_points()
-    #     plot.draw_points(marigram_points)
-    #
-    #     self.MOST_subprogram.marigram_points = marigram_points
-    #
-    #     if self.MOST_subprogram.calculated & (self.MOST_subprogram.marigram_points != []):
-    #         self.action_marigrams.setEnabled(True)
-    #
-    #     dialog.close()
+    def open_bottom_profile_plot_dialog(self, profile):
+        plot = CommonPlotBuilder(profile)
+        dialog = PlotDialog(self, "Bottom profile", plot)
+        dialog.move(self.pos() + self.centralWidget().pos() * 5)
+        dialog.resize(370, 370)
+        dialog.show()
 
     def get_marigram_points(self):
         # self.plot_widget.set_plot(plot_name)
@@ -503,7 +491,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                                            ])
 
         self.static_settings_dialog.move(self.pos() + self.centralWidget().pos() * 5)
-        # self.static_settings_dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
         self.static_settings_dialog.show()
 
     def show_static_calculation_screen(self):
@@ -511,22 +498,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.setCentralWidget(calculation_screen)
 
     def show_static_results(self):
-        # self.plot_widget = self.STATIC_subprogram.plot_widget
-        # self.bottom_plot = HeatmapContourPlotBuilder(self.bottom_map, 10)
-        # self.MOST_subprogram.set_source_to_static()
-        # self.MOST_subprogram.draw_static_source(self.bottom_plot)
-        # self.plot_widget.add_plot("bottom", self.bottom_plot)
-        # self.plot_widget.add_plot("static", self.STATIC_subprogram.heatmap_plot)
-        # self.plot_widget = PlotWidget({"bottom": self.MOST_subprogram.bottom_plot})
-
-        # self.plot_widget = self.MOST_subprogram.plot_widget
-        # self.bottom_plot = HeatmapPlotBuilder(self.bottom_map, 10)
-        # self.plot_widget.add_plot("bottom", self.bottom_plot)
-        # self.MOST_subprogram.set_source_to_static()
-        # self.MOST_subprogram.draw_static_source(self.bottom_plot)
-
         self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
-        # self.MOST_subprogram.set_bottom_profile(self.bottom_profile, self.bottom_plot)
         self.MOST_subprogram.set_source_to_static()
         self.MOST_subprogram.draw_static_source(self.bottom_plot)
         self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
@@ -552,7 +524,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def open_static_profile_dialog(self):
         self.static_profile_dialog = StaticProfileDialog(self, self.draw_wave_profile_on_static)
-        # self.static_profile_dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
         self.static_profile_dialog.show()
 
 
