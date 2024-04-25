@@ -31,7 +31,7 @@
      <property name="title">
       <string>Bottom profile...</string>
      </property>
-     <addaction name="action_profile_default"/>
+     <addaction name="action_profile_last"/>
      <addaction name="action_profile_koryto"/>
      <addaction name="action_profile_flat"/>
      <addaction name="action_profile_tilted"/>
@@ -176,9 +176,9 @@
     <string>Load existing MOST results...</string>
    </property>
   </action>
-  <action name="action_profile_default">
+  <action name="action_profile_last">
    <property name="text">
-    <string>Default</string>
+    <string>Last used</string>
    </property>
   </action>
   <action name="action_draw_wave_profile">

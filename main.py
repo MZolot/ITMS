@@ -91,6 +91,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.MOST_subprogram.draw_source(self.bottom_plot)
 
+        self.bottom_profile_flat_dialog = None
+        self.bottom_profile_complex_dialog = None
         self.static_settings_dialog = None
         self.static_profile_dialog = None
 
@@ -121,15 +123,12 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         # ============== Bottom profile =================
 
-        # self.action_show_area.triggered.connect(
-        #     lambda: self.plot_widget.set_plot("bottom"))
+        # self.action_profile_default.triggered.connect(
+        #     lambda: self.set_bottom_profile(self.koryto_profile)
+        # )
+        self.action_profile_last.triggered.connect(self.load_last_used_profile)
+        self.action_profile_koryto.triggered.connect(self.set_koryto_profile)
 
-        self.action_profile_default.triggered.connect(
-            lambda: self.set_bottom_profile(self.koryto_profile)
-        )
-        self.action_profile_koryto.triggered.connect(
-            lambda: self.set_bottom_profile(self.koryto_profile)
-        )
         self.action_profile_flat.triggered.connect(
             lambda: self.open_bottom_profile_dialog("flat")
         )
@@ -173,9 +172,13 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def open_bottom_profile_dialog(self, profile_type: str):
         if profile_type == "flat":
-            dialog = BottomProfileFlatDialog(self, self.set_bottom_profile)
+            if self.bottom_profile_flat_dialog is None:
+                self.bottom_profile_flat_dialog = BottomProfileFlatDialog(self, self.set_bottom_profile)
+            dialog = self.bottom_profile_flat_dialog
         elif profile_type == "complex":
-            dialog = BottomProfileComplexDialog(self, self.set_bottom_profile)
+            if self.bottom_profile_complex_dialog is None:
+                self.bottom_profile_complex_dialog = BottomProfileComplexDialog(self, self.set_bottom_profile)
+            dialog = self.bottom_profile_complex_dialog
         else:
             print("incorrect bottom profile type: " + profile_type)
             return
@@ -191,6 +194,41 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.plot_widget.set_plot("bottom")
 
         self.MOST_subprogram.set_bottom_profile(self.bottom_profile)
+
+    def set_koryto_profile(self):
+        f = open("last_used_profile.txt", 'w')
+        f.write(f'koryto\n')
+        f.close()
+        self.set_bottom_profile(self.koryto_profile)
+
+    def load_last_used_profile(self):
+        f = open("last_used_profile.txt", 'r')
+        profile_type = f.readline().strip()
+        print(f">> Loading last used profile: {profile_type}")
+
+        if profile_type == "koryto":
+            self.set_bottom_profile(self.koryto_profile)
+
+        elif profile_type == "flat":
+            values = f.readline().strip().split()
+            self.bottom_profile_flat_dialog = BottomProfileFlatDialog(self, self.set_bottom_profile)
+            self.bottom_profile_flat_dialog.set_values(values[0], values[1])
+            self.bottom_profile_flat_dialog.ok_pushed()
+
+        elif profile_type == "complex":
+            start_depth = f.readline().strip()
+            depths = []
+            lengths = []
+            for line in f:
+                values = line.strip().split()
+                lengths.append(values[0])
+                depths.append(values[1])
+
+            self.bottom_profile_complex_dialog = BottomProfileComplexDialog(self, self.set_bottom_profile)
+            self.bottom_profile_complex_dialog.set_values(start_depth, lengths, depths)
+            self.bottom_profile_complex_dialog.ok_pushed()
+
+        f.close()
 
     def open_most_input_menu(self, element_names, title, menu_type=""):
         elements = []
@@ -232,22 +270,10 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     # def parse_initial_data_file(self):  # TODO: change to work for static
     def show_most_result(self):
-        # self.plot_widget = self.MOST_subprogram.plot_widget
-        # self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
-        # self.plot_widget.add_plot("bottom", self.bottom_plot)
-        # self.MOST_subprogram.draw_source(self.bottom_plot)
-
-        # self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
-        # self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
-        # self.plot_widget = self.MOST_subprogram.plot_widget
         self.plot_widget = PlotWidget()
         self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
         self.plot_widget.add_plot("bottom", self.bottom_plot)
-        # self.MOST_subprogram.set_bottom_profile(self.bottom_profile, self.bottom_plot)
         self.MOST_subprogram.draw_source(self.bottom_plot)
-
-        # if self.STATIC_subprogram.calculated:
-        #     self.plot_widget.add_plot("static", self.STATIC_subprogram.heatmap_plot)
 
         self.action_heatmap.setEnabled(True)
         self.action_heatmap_with_contour.setEnabled(True)
