@@ -75,9 +75,6 @@ class BottomProfileComplexDialog(BottomProfileDialog, complex_ui.Ui_Dialog):
             start_depth = float(self.line_edit_start_depth.text())
             start_depth = abs(start_depth) * -1
         except ValueError:
-            # error_dialog = ErrorDialog("Incorrect or empty depth value!\nPlease enter floating number.")
-            # error_dialog.exec()
-            # return
             start_depth = 0
 
         depths = []

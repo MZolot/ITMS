@@ -284,6 +284,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         if (self.MOST_subprogram.marigram_points is not None) & (self.MOST_subprogram.marigram_points != []):
             self.action_marigrams.setEnabled(True)
+            self.bottom_plot.draw_points(self.MOST_subprogram.marigram_points)
 
         self.plot_widget.set_plot("bottom")
         self.setCentralWidget(self.plot_widget.get_widget())

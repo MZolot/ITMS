@@ -100,20 +100,21 @@ class HeatmapPlotBuilder(PlotBuilder):
     def clear_elliptical_source(self):
         if self.source_center:
             self.source_center[0].remove()
-            # self.figure.canvas.draw()
-            # self.figure.canvas.flush_events()
+            self.figure.canvas.draw()
+            self.figure.canvas.flush_events()
         if self.ellipse:
             self.ellipse.remove()
-            # self.figure.canvas.draw()
-            # self.figure.canvas.flush_events()
+            self.ellipse = None
+            self.figure.canvas.draw()
+            self.figure.canvas.flush_events()
 
     def clear_points(self):
         if len(self.scatter_points) > 0:
             for point in self.scatter_points:
                 point.remove()
+            self.scatter_points = []
             self.figure.canvas.draw()
             self.figure.canvas.flush_events()
-            self.scatter_points = []
 
     def clear_line(self):
         if self.lines:
@@ -124,17 +125,18 @@ class HeatmapPlotBuilder(PlotBuilder):
             self.figure.canvas.flush_events()
 
     def clear_rectangle(self):
-        if self.rectangle:
+        if self.rectangle is not None:
             self.rectangle.remove()
-            # self.figure.canvas.draw()
-            # self.figure.canvas.flush_events()
+            self.rectangle = None
+            self.figure.canvas.draw()
+            self.figure.canvas.flush_events()
 
     def clear_contour(self):
         if self.source_contour is not None:
             self.source_contour.remove()
-            # self.source_contour = None
-            # self.figure.canvas.draw()
-            # self.figure.canvas.flush_events()
+            self.source_contour = None
+            self.figure.canvas.draw()
+            self.figure.canvas.flush_events()
 
     def clear_everything(self):
         self.clear_rectangle()

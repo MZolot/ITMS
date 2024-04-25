@@ -4,7 +4,6 @@ from subprograms.static_interface import STATICInterface
 from ui_elements.load_data_file_selection_dialog import *
 from ui_elements.waiting_screens import *
 from file_loader import *
-from plots.stacked_plots_widget import PlotWidget
 from plots.matplotlib_plot_builder import (PlotBuilder,
                                            HeatmapPlotBuilder,
                                            HeatmapContourPlotBuilder,
@@ -70,7 +69,7 @@ class MOSTInterface(SubprogramInterface):
             "size": ["x-size", "y-size", "x-step", "y-step"],
             "source": ["max elevation", "ellipse half x length", "ellipse half y length",
                        "center x", "center y"],
-            "calculation": ["time step", "number of time steps", "number of steps between surface output"]
+            "calculation": ["time step", "number of time steps"] #"number of steps between surface output"
         }
 
     def open_file_loading_menu(self):
@@ -91,6 +90,8 @@ class MOSTInterface(SubprogramInterface):
             self.ini_data_elements["center x"].set_current_value(self.static.ini_data_elements["x"].get_current_value())
             self.ini_data_elements["center y"].set_current_value(self.static.ini_data_elements["y"].get_current_value())
             self.ini_data_elements["max elevation"].set_current_value(0)
+
+        self.ini_data_elements["number of steps between surface output"] = self.ini_data_elements["number of time steps"]
 
         print(">> Saving MOST parameters")
         for i in self.ini_data_elements.values():
@@ -152,8 +153,6 @@ class MOSTInterface(SubprogramInterface):
         self.static_start_y = y - int(n / 2)
 
     def print_scaled_static(self):
-        # for p in self.static.ini_data_elements.keys():
-        #     print(p + " - " + str(self.static.ini_data_elements[p]))
         unscaled_static = np.transpose(self.static.result)
         n = self.static.ini_data_elements["N1"].get_current_value()
         m = self.static.ini_data_elements["M1"].get_current_value()
@@ -173,13 +172,6 @@ class MOSTInterface(SubprogramInterface):
                 y_step += 1
             y_step = 0
         f_out.close()
-
-        # f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
-        # for j in range(0, n):
-        #     for i in range(0, m):
-        #         f_out.write(format(unscaled_static[i][j], '.3f') + " ")
-        #     f_out.write("\n")
-        # f_out.close()
 
     def save_marigram_points(self):
         n = len(self.marigram_points)
@@ -239,7 +231,6 @@ class MOSTInterface(SubprogramInterface):
             print(">> MOST SUBPROGRAM ERROR: only ", end='')
             print(str(self.steps_calculated) + " steps calculated instead of ", end='')
             print(str(self.ini_data_elements["number of time steps"].get_current_value()))
-        # self.marigram_points = []
         self.show_loading_screen_callback()
 
         self.parse_parameters()
@@ -278,10 +269,6 @@ class MOSTInterface(SubprogramInterface):
         return loading_screen.get_screen()
 
     def visualise_results(self):
-        # self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
-        # self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
-        # self.draw_source()
-        self.plot_widget = PlotWidget()
 
         loaded_files = self.loader.get_results()
         self.max_height = loaded_files[self.program_file_names["max_height"]]
@@ -299,11 +286,6 @@ class MOSTInterface(SubprogramInterface):
                                                                    use_default_cmap=False)
         self.heatmap_3d_plot = Heatmap3DPlotBuilder(self.max_height)
         self.wave_profile_plot = BarPlotBuilder(self.bar_chart_data, self.save_wave_profile)
-
-        # self.plot_widget.add_plot("heatmap", self.heatmap_plot)
-        # self.plot_widget.add_plot("heatmap contour", self.heatmap_with_contour_plot)
-        # self.plot_widget.add_plot("heatmap 3d", self.heatmap_3d_plot)
-        # self.plot_widget.add_plot("profile", self.wave_profile_plot)
 
         self.plot_name_to_builder["heatmap"] = self.heatmap_plot
         self.plot_name_to_builder["heatmap contour"] = self.heatmap_with_contour_plot
@@ -363,7 +345,6 @@ class MOSTInterface(SubprogramInterface):
         self.marigrams_plot = MarigramsPlotBuilder(x, self.marigrams_plot_data, self.marigram_points,
                                                    self.save_marigrams)
         self.plot_widget.add_plot("marigrams", self.marigrams_plot)
-        # self.plot_widget.set_plot("marigrams")
         self.plot_name_to_builder["marigrams"] = self.marigrams_plot
 
     def most_coordinates_to_static_coordinates(self, most_x, most_y):

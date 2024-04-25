@@ -18,7 +18,6 @@ class FileLoader(QObject):
             print(f">> Loading {f}  {time}")
             res = np.genfromtxt(f, filling_values=0.0)
             self.loading_results[f] = res
-            # self.progress.emit(i + 1)
         time = datetime.now().strftime("%H:%M:%S:%f")
         print(f">> Loading finished  {time}\n")
         self.finished.emit()

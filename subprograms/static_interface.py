@@ -105,14 +105,6 @@ class STATICInterface(SubprogramInterface):
 
         f.close()
 
-        # f_out = open("subprograms\\MOST_with_STATIC\\static.txt", "w")
-        # transposed = np.transpose(self.result)
-        # for j in range(0, m1):
-        #     for i in range(0, n1):
-        #         f_out.write(format(transposed[i][j], '.3f') + " ")
-        #     f_out.write("\n")
-        # f_out.close()
-
         self.visualise_results()
 
     def visualise_results(self):

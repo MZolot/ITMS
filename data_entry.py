@@ -1,6 +1,3 @@
-import json
-
-
 class DataEntry:
     def __init__(self, name, label_text, default_value, unit, is_float=False):
         self.name = name
