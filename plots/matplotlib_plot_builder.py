@@ -57,7 +57,6 @@ class HeatmapPlotBuilder(PlotBuilder):
         self.figure.colorbar(data, fraction=0.046, pad=0.04)
         self.axes.set_xlabel("x", loc='right', fontsize=14)
         self.axes.set_ylabel("y", loc='top', fontsize=14)
-        # self.axes.xaxis.tick_top()
 
     def get_input_points(self, n=-1):
         points = self.figure.ginput(n=n, timeout=-1, show_clicks=True,
@@ -247,33 +246,29 @@ class CommonPlotBuilder(PlotBuilder):
     def __init__(self, plot_data):
         super().__init__()
         x = np.array([range(len(plot_data))]).transpose()
-        data = np.array(plot_data)
-        # ind_zero = np.nonzero(((data[1:] < 0) & (data[:-1] >= 0)) |
-        #                       ((data[1:] > 0) & (data[:-1] <= 0)))
-        # for i in ind_zero[-1:0:-1]:
-        #     curr_x = i + (1 / (data[i + 1] - data[i]))
-        #     np.insert(data, i, curr_x)
-        #     np.insert(data, i, 0)
-
-        # positive = np.ma.masked_where(data <= 0, data, True)
-        # negative = np.ma.masked_where(data >= 0, data, True)
-
-        # positive = data.copy()
-        # positive[data < 0] = None
-        #
-        # negative = data.copy()
-        # negative[data > 0] = None
-
-        # print(data)
-        # print("\npositive:")
-        # print(positive)
-        # print("\nnegative:")
-        # print(negative)
-
+        y = np.array(plot_data)
         self.axes = self.figure.add_subplot(111)
-        # self.axes.plot(x, data, 'g', x, positive, 'r', x, negative, 'b')
-        # self.axes.plot(x, positive, 'r', x, negative, 'b')
-        self.axes.plot(x, data, 'b')
+
+        ind_zer = np.nonzero((y[1:] > 0) & (y[:-1] < 0))
+        for i in ind_zer[::-1]:
+            xn = x[i] - (x[i + 1] - x[i]) / (y[i + 1] - y[i]) * y[i]
+            x = np.insert(x, i + 1, xn)
+            y = np.insert(y, i + 1, 0.0)
+
+        ind_zer = np.nonzero((y[1:] < 0) & (y[:-1] > 0))
+        for i in ind_zer[::-1]:
+            xn = x[i] - (x[i + 1] - x[i]) / (y[i + 1] - y[i]) * y[i]
+            x = np.insert(x, i + 1, xn)
+            y = np.insert(y, i + 1, 0.0)
+
+        yp = y.copy()
+        yp[y < 0] = None
+
+        yn = y.copy()
+        yn[y > 0] = None
+
+        self.axes.plot(x, yp, 'r')
+        self.axes.plot(x, yn, 'b')
         self.axes.grid()
 
 
