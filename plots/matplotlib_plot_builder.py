@@ -196,13 +196,19 @@ class Heatmap3DPlotBuilder(PlotBuilder):
 
 
 class BarPlotBuilder(PlotBuilder):
-    def __init__(self, plot_data, save_data_callback):
+    def __init__(self, plot_data, plot_data2=None, save_data_callback=None):
         super().__init__()
-        self.toolbar: NavigationToolbar = ToolbarWithSaveData(self.canvas, save_data_callback)
+        if save_data_callback is not None:
+            self.toolbar: NavigationToolbar = ToolbarWithSaveData(self.canvas, save_data_callback)
 
         self.axes = self.figure.add_subplot(111)
+
         x = range(len(plot_data))
-        self.axes.bar(x, plot_data)
+        if plot_data2 is not None:
+            self.axes.bar(x, plot_data, color='r')
+            self.axes.bar(x, plot_data2, color='b')
+        else:
+            self.axes.bar(x, plot_data)
 
 
 class MarigramsPlotBuilder(PlotBuilder):

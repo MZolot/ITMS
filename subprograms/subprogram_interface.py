@@ -18,17 +18,12 @@ class SubprogramInterface:
         self.process: QProcess = QProcess()
 
         self.wave_profile_end_points = []
-        self.bar_chart_data = None
+        self.coastal_wave_profile_data = None
         self.isoline_levels = []
         self.isoline_plot_data = None
         self.thread = None
         self.loader = None
         self.calculation_screen = None
-
-        self.heatmap_plot = None
-        self.heatmap_with_contour_plot = None
-        self.heatmap_3d_plot = None
-        self.wave_profile_plot = None
 
         self.calculated = False
 

@@ -49,6 +49,7 @@ class MOSTInterface(SubprogramInterface):
         self.steps_calculated: int = 0
         # self.height = None
         self.max_height = None
+        self.min_height = None
 
         self.static: STATICInterface = static
 
@@ -69,7 +70,7 @@ class MOSTInterface(SubprogramInterface):
             "size": ["x-size", "y-size", "x-step", "y-step"],
             "source": ["max elevation", "ellipse half x length", "ellipse half y length",
                        "center x", "center y"],
-            "calculation": ["time step", "number of time steps"] #"number of steps between surface output"
+            "calculation": ["time step", "number of time steps"]  # "number of steps between surface output"
         }
 
     def open_file_loading_menu(self):
@@ -91,7 +92,8 @@ class MOSTInterface(SubprogramInterface):
             self.ini_data_elements["center y"].set_current_value(self.static.ini_data_elements["y"].get_current_value())
             self.ini_data_elements["max elevation"].set_current_value(0)
 
-        self.ini_data_elements["number of steps between surface output"] = self.ini_data_elements["number of time steps"]
+        (self.ini_data_elements["number of steps between surface output"].
+         set_current_value(self.ini_data_elements["number of time steps"].get_current_value()))
 
         print(">> Saving MOST parameters")
         for i in self.ini_data_elements.values():
@@ -238,7 +240,8 @@ class MOSTInterface(SubprogramInterface):
 
         self.thread = QThread()
         self.loader = FileLoader([
-            self.program_file_names["max_height"]
+            self.program_file_names["max_height"],
+            self.program_file_names["min_height"]
             # self.program_file_names["height"]
         ])
         self.loader.moveToThread(self.thread)
@@ -264,33 +267,46 @@ class MOSTInterface(SubprogramInterface):
                 self.marigrams_plot_data[i].append(float(val))
         f.close()
 
-    def get_loading_screen(self):
-        loading_screen = LoadingScreen()
-        return loading_screen.get_screen()
+    def get_coastal_wave_profile_data(self):
+        data_max = self.max_height[3]
+        # TODO: replace '3' with automatic calculation of where the shore line is
+        pos = np.where(data_max > 0)
+        if len(pos[0]) == 0:
+            return np.zeros(len(data_max)), np.zeros(len(data_max))
+
+        start = pos[0][0]
+        end = pos[0][-1]
+        data_max_non_zero = data_max[start:end]
+
+        data_min = self.min_height[3]
+        data_min_non_zero = data_min[start:end]
+        return data_max_non_zero, data_min_non_zero
 
     def visualise_results(self):
-
         loaded_files = self.loader.get_results()
         self.max_height = loaded_files[self.program_file_names["max_height"]]
+        self.min_height = loaded_files[self.program_file_names["min_height"]]
         # self.height = loaded_files[self.program_file_names["height"]]
 
         self.isoline_plot_data = self.max_height
-        self.bar_chart_data = self.max_height[3]
+        # self.coastal_wave_profile_data = self.max_height[3]
+        coastal_wave_profile_data_max, coastal_wave_profile_data_min = self.get_coastal_wave_profile_data()
 
         self.calculated = True
 
-        self.heatmap_plot = HeatmapPlotBuilder(self.max_height, default_cmap=False)
-        self.heatmap_plot.draw_points(self.marigram_points)
-        self.heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.max_height,
-                                                                   levels=self.isoline_levels,
-                                                                   use_default_cmap=False)
-        self.heatmap_3d_plot = Heatmap3DPlotBuilder(self.max_height)
-        self.wave_profile_plot = BarPlotBuilder(self.bar_chart_data, self.save_wave_profile)
+        heatmap_plot = HeatmapPlotBuilder(self.max_height, default_cmap=False)
+        heatmap_plot.draw_points(self.marigram_points)
+        heatmap_with_contour_plot = HeatmapContourPlotBuilder(self.max_height,
+                                                              levels=self.isoline_levels,
+                                                              use_default_cmap=False)
+        heatmap_3d_plot = Heatmap3DPlotBuilder(self.max_height)
+        wave_profile_plot = BarPlotBuilder(coastal_wave_profile_data_max, coastal_wave_profile_data_min,
+                                           self.save_wave_profile)
 
-        self.plot_name_to_builder["heatmap"] = self.heatmap_plot
-        self.plot_name_to_builder["heatmap contour"] = self.heatmap_with_contour_plot
-        self.plot_name_to_builder["heatmap 3d"] = self.heatmap_3d_plot
-        self.plot_name_to_builder["profile"] = self.wave_profile_plot
+        self.plot_name_to_builder["heatmap"] = heatmap_plot
+        self.plot_name_to_builder["heatmap contour"] = heatmap_with_contour_plot
+        self.plot_name_to_builder["heatmap 3d"] = heatmap_3d_plot
+        self.plot_name_to_builder["profile"] = wave_profile_plot
 
         if len(self.marigram_points) > 0:
             self.plot_marigrams()

@@ -1,6 +1,7 @@
 import ui_elements.qt_designer_ui.main_ui as main_ui
 import ui_elements.qt_designer_ui.marigrams_info_message_ui as marigrams_info_ui
 from ui_elements.input_dialog import *
+from ui_elements.waiting_screens import *
 from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
 from ui_elements.load_data_file_selection_dialog import FileSelectionMenuDialog
 from ui_elements.static_settings_dialog import StaticSettingsDialog
@@ -24,20 +25,9 @@ import numpy as np
 import sys
 from datetime import datetime
 
-most_config_file_name = "resources/most_parameters_config.json"
-most_ini_data_default_file_name = "subprograms/MOST/ini_data.txt"
-most_exe_file_name = "subprograms/MOST/wave_1500x900_01.exe"
-
 koryto_profile_file_name = "subprograms/MOST/koryto_profile_default.txt"
-bottom_profile_file_name = "subprograms/MOST/koryto_profile.txt"
-
-height_default_file_name = "subprograms/MOST/heigh.dat"
-max_height_default_file_name = "subprograms/MOST/maxheigh.dat"
-
+most_config_file_name = "resources/most_parameters_config.json"
 static_config_file_name = "resources/static_parameters_config.json"
-static_ini_data_default_file_name = "subprograms/STATIC/static_param.txt"
-static_exe_file_name = "subprograms/STATIC/Static.exe"
-static_results_file_name = "subprograms/STATIC/static.bin"
 
 
 class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
@@ -47,10 +37,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.koryto_profile = np.loadtxt(koryto_profile_file_name)
         self.bottom_profile = np.copy(self.koryto_profile)
         self.bottom_map = np.transpose(np.tile(self.bottom_profile, (1500, 1)))
-        # self.bottom_map = np.tile(self.bottom_profile, (1500, 1))
-        # self.bottom_plot = HeatmapContourPlotBuilder(self.bottom_map, 10)
         self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
-        # self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
 
         self.static_files = {
             "exe": "Static.exe",
@@ -68,10 +55,11 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                                  show_results_callback=self.show_static_results)
 
         self.most_files = {
-            "exe": "wave_1500x900_08.exe",
+            "exe": "wave_mareo_min.exe",
             "initial": "ini_data.txt",
             "height": "heigh.dat",
             "max_height": "maxheigh.dat",
+            "min_height": "h_min.dat",
             "profile": "koryto_profile.txt"
         }
 
@@ -86,7 +74,6 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                              show_results_callback=self.show_most_result,
                                              static=self.STATIC_subprogram)
 
-        # self.plot_widget = PlotWidget({"bottom": self.MOST_subprogram.bottom_plot})
         self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
 
         self.MOST_subprogram.draw_source(self.bottom_plot)
@@ -266,8 +253,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.setCentralWidget(calculation_screen)
 
     def show_loading_screen(self):
-        loading_screen = self.MOST_subprogram.get_loading_screen()
-        self.setCentralWidget(loading_screen)
+        loading_screen = LoadingScreen()
+        self.setCentralWidget(loading_screen.get_screen())
 
     # def parse_initial_data_file(self):  # TODO: change to work for static
     def show_most_result(self):
