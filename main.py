@@ -327,7 +327,9 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         self.wave_profile_end_points = wave_profile_end_points
         self.wave_profile_data = self.get_wave_profile_on_line(self.wave_profile_end_points,
                                                                self.MOST_subprogram.max_height)
-        wave_profile_plot = BarPlotBuilder(self.wave_profile_data, self.save_wave_profile_data)
+        wave_profile_data_min = self.get_wave_profile_on_line(self.wave_profile_end_points,
+                                                              self.MOST_subprogram.min_height)
+        wave_profile_plot = BarPlotBuilder(self.wave_profile_data, wave_profile_data_min, self.save_wave_profile_data)
 
         dialog = PlotDialog(heatmap_dialog, "Wave profile", wave_profile_plot)
         dialog.show()
