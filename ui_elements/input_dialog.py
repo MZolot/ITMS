@@ -93,7 +93,7 @@ class CalculationMenuDialog(InputMenuDialog):
             callback()
 
 
-class ErrorDialog(QtWidgets.QDialog, error_ui.Ui_Dialog):
+class ErrorDialog(QtWidgets.QDialog, error_ui.Ui_Dialog):  # TODO: заменить использования на общий класс диалога
     def __init__(self, error_field_name: str):
         super().__init__()
         self.setupUi(self)

@@ -27,7 +27,7 @@ class HeatmapDialog(PlotDialog):
 
     def get_wave_profile_points(self):
         self.push_button_profile.setEnabled(False)
-        self.plot.clear_points()  # убирает мареограммы
+        # self.plot.clear_points()  # убирает мареограммы
         self.plot.clear_line()
 
         wave_profile_end_points = self.plot.get_input_points(n=2)
@@ -39,3 +39,15 @@ class HeatmapDialog(PlotDialog):
         self.push_button_profile.setEnabled(True)
 
         self.wave_profile_callback(self, wave_profile_end_points)
+
+
+class WaveProfileDialog(PlotDialog):
+    def __init__(self, parent, title: str, plot: HeatmapPlotBuilder, height_info_callback):
+        super().__init__(parent, title, plot)
+
+        self.push_button_info = QtWidgets.QPushButton(self.buttons_widget)
+        # self.push_button_info.setMinimumSize(QtCore.QSize(125, 28))
+        # self.push_button_info.setMaximumSize(QtCore.QSize(125, 28))
+        self.push_button_info.setText("View profile characteristics")
+        self.push_button_info.clicked.connect(lambda: height_info_callback(self))
+        self.buttons_layout.insertWidget(0, self.push_button_info)

@@ -1,31 +1,30 @@
+import os
+import sys
+from datetime import datetime
+
+import numpy as np
+from PyQt5 import QtWidgets
+
 import ui_elements.qt_designer_ui.main_ui as main_ui
 import ui_elements.qt_designer_ui.marigrams_info_message_ui as marigrams_info_ui
-from ui_elements.input_dialog import *
-from ui_elements.waiting_screens import *
-from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
-from ui_elements.load_data_file_selection_dialog import FileSelectionMenuDialog
-from ui_elements.static_settings_dialog import StaticSettingsDialog
-from ui_elements.static_profile_dialog import StaticProfileDialog
-from ui_elements.most_results_dialog import *
-from ui_elements.bottom_profile_dialog import *
-from plots.stacked_plots_widget import PlotWidget
-
-from subprograms.most_interface import MOSTInterface
-from subprograms.static_interface import STATICInterface
-
 from plots.matplotlib_plot_builder import (HeatmapPlotBuilder,
                                            HeatmapContourPlotBuilder,
                                            BarPlotBuilder,
                                            CommonPlotBuilder)
+from plots.stacked_plots_widget import PlotWidget
+from subprograms.most_interface import MOSTInterface
+from subprograms.static_interface import STATICInterface
+from ui_elements.bottom_profile_dialog import *
+from ui_elements.heights_info_dialog import *
+from ui_elements.input_dialog import *
+from ui_elements.isoline_settings_dialog import IsolineSettingsDialog
+from ui_elements.load_data_file_selection_dialog import FileSelectionMenuDialog
+from ui_elements.most_results_dialog import *
+from ui_elements.static_profile_dialog import StaticProfileDialog
+from ui_elements.static_settings_dialog import StaticSettingsDialog
+from ui_elements.waiting_screens import *
 
-from PyQt5 import QtWidgets
-
-import numpy as np
-
-import sys
-from datetime import datetime
-
-koryto_profile_file_name = "subprograms/MOST/koryto_profile_default.txt"
+koryto_profile_file_name = os.path.join("subprograms/MOST/koryto_profile_default.txt")
 most_config_file_name = "resources/most_parameters_config.json"
 static_config_file_name = "resources/static_parameters_config.json"
 
@@ -76,6 +75,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         self.plot_widget = PlotWidget({"bottom": self.bottom_plot})
 
+        # self.set_bottom_profile(self.bottom_profile)
         self.MOST_subprogram.draw_source(self.bottom_plot)
 
         self.bottom_profile_flat_dialog = None
@@ -174,11 +174,7 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
     def set_bottom_profile(self, profile):
         self.bottom_profile = profile
-        self.bottom_map = np.transpose(np.tile(self.bottom_profile, (1500, 1)))
-        self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
-        self.MOST_subprogram.draw_source(self.bottom_plot)
-        self.plot_widget.add_plot("bottom", self.bottom_plot)
-        self.plot_widget.set_plot("bottom")
+        self.set_bottom_plot()
 
         self.MOST_subprogram.set_bottom_profile(self.bottom_profile)
         self.open_bottom_profile_plot_dialog(self.bottom_profile)
@@ -218,6 +214,14 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
 
         f.close()
 
+    def set_bottom_plot(self):
+        x_size = self.MOST_subprogram.ini_data_elements["x-size"].get_current_value()
+        self.bottom_map = np.transpose(np.tile(self.bottom_profile, (x_size, 1)))
+        self.bottom_plot = HeatmapPlotBuilder(self.bottom_map)
+        self.MOST_subprogram.draw_source(self.bottom_plot)
+        self.plot_widget.add_plot("bottom", self.bottom_plot)
+        self.plot_widget.set_plot("bottom")
+
     def open_most_input_menu(self, element_names, title, menu_type=""):
         elements = []
         for n in element_names:
@@ -228,7 +232,9 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
                                                  lambda: self.MOST_subprogram.draw_source(self.bottom_plot)])
         elif menu_type == "size":
             menu = InputMenuDialogWithCallbacks(elements, title,
-                                                [lambda: self.MOST_subprogram.draw_source(self.bottom_plot)])
+                                                [self.set_bottom_plot
+                                                 # lambda: self.MOST_subprogram.draw_source(self.bottom_plot)
+                                                 ])
         elif menu_type == "calculation":
             menu = CalculationMenuDialog(elements, title,
                                          [lambda: self.MOST_subprogram.start_subprogram(self.show_error_message)])
@@ -283,6 +289,8 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         plot.update_canvas()
         if plot_name == "heatmap":
             dialog = HeatmapDialog(self, dialog_title, plot, self.show_most_wave_profile)
+        elif plot_name == "profile":
+            dialog = WaveProfileDialog(self, dialog_title, plot, self.show_wave_profile_info)
         else:
             dialog = PlotDialog(self, dialog_title, plot)
         # dialog.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint)
@@ -332,6 +340,10 @@ class MOSTApp(QtWidgets.QMainWindow, main_ui.Ui_MainWindow):
         wave_profile_plot = BarPlotBuilder(self.wave_profile_data, wave_profile_data_min, self.save_wave_profile_data)
 
         dialog = PlotDialog(heatmap_dialog, "Wave profile", wave_profile_plot)
+        dialog.show()
+
+    def show_wave_profile_info(self, profile_dialog):
+        dialog = HeightsInfoDialog(profile_dialog, self.wave_profile_data)
         dialog.show()
 
     def draw_wave_profile_on_static(self, draw_profile_callback):

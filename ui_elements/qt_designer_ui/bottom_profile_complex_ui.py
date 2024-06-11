@@ -147,7 +147,7 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(_translate("Dialog", "Bottom profile"))
         self.label_start_depth.setText(_translate("Dialog", "Start depth:"))
         self.line_edit_start_depth.setPlaceholderText(_translate("Dialog", "0"))
-        self.label_length.setText(_translate("Dialog", "Segment length"))
+        self.label_length.setText(_translate("Dialog", "Segment length (steps)"))
         self.label_depth.setText(_translate("Dialog", "Segment end depth (m)"))
         self.line_edit_depth.setPlaceholderText(_translate("Dialog", "5000"))
         self.line_edit_length.setPlaceholderText(_translate("Dialog", "900"))

@@ -4,7 +4,6 @@ from .error_dialog import ErrorDialog
 from PyQt5 import QtWidgets
 import numpy as np
 
-
 last_used_profile_file_name = "last_used_profile.txt"
 
 
@@ -39,7 +38,7 @@ class BottomProfileFlatDialog(BottomProfileDialog, flat_ui.Ui_Dialog):
         try:
             depth = float(self.line_edit_depth.text())
         except ValueError:
-            error_dialog = ErrorDialog("Incorrect or empty depth value!\nPlease enter floating number.")
+            error_dialog = ErrorDialog("Incorrect or empty depth value!\nPlease enter integer or floating number.")
             error_dialog.exec()
             return
         try:
@@ -88,7 +87,9 @@ class BottomProfileComplexDialog(BottomProfileDialog, complex_ui.Ui_Dialog):
                     depth = float(self.depth_line_edits[i].placeholderText())
                     depths.append(abs(depth) * -1)
                 else:
-                    error_dialog = ErrorDialog("Incorrect or empty depth value!\nPlease enter floating number.")
+                    error_dialog = ErrorDialog(
+                        "Incorrect or empty end depth value for one of segments!\n" +
+                        "Please enter integer or floating number.")
                     error_dialog.exec()
                     return
             try:
@@ -96,10 +97,12 @@ class BottomProfileComplexDialog(BottomProfileDialog, complex_ui.Ui_Dialog):
                 lengths.append(length)
             except ValueError:
                 if i == 0:
-                    length = float(self.length_line_edits[i].placeholderText())
+                    length = int(self.length_line_edits[i].placeholderText())
                     lengths.append(length)
                 else:
-                    error_dialog = ErrorDialog("Incorrect or empty length value!\nPlease enter integer number.")
+                    error_dialog = ErrorDialog(
+                        "Incorrect or empty length value for one of segments!\n" +
+                        "Please enter integer number.")
                     error_dialog.exec()
                     return
 
@@ -126,12 +129,12 @@ class BottomProfileComplexDialog(BottomProfileDialog, complex_ui.Ui_Dialog):
 
     def add_level(self):
         line_edit_depth = QtWidgets.QLineEdit()
-        line_edit_depth.setPlaceholderText(str(len(self.depth_line_edits) + 1))
+        # line_edit_depth.setPlaceholderText(str(len(self.depth_line_edits) + 1))
         self.grid_layout.addWidget(line_edit_depth, (len(self.depth_line_edits) + 2), 0)
         self.depth_line_edits.append(line_edit_depth)
 
         line_edit_length = QtWidgets.QLineEdit()
-        line_edit_length.setPlaceholderText(str(len(self.length_line_edits) + 1))
+        # line_edit_length.setPlaceholderText(str(len(self.length_line_edits) + 1))
         self.grid_layout.addWidget(line_edit_length, (len(self.length_line_edits) + 2), 1)
         self.length_line_edits.append(line_edit_length)
 

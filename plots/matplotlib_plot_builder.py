@@ -56,7 +56,7 @@ class HeatmapPlotBuilder(PlotBuilder):
 
         self.figure.colorbar(data, fraction=0.046, pad=0.04)
         self.axes.set_xlabel("x", loc='right', fontsize=14)
-        self.axes.set_ylabel("y", loc='top', fontsize=14)
+        self.axes.set_ylabel("y", loc='top', fontsize=14, rotation=0)
 
     def get_input_points(self, n=-1):
         points = self.figure.ginput(n=n, timeout=-1, show_clicks=True,
@@ -209,6 +209,8 @@ class BarPlotBuilder(PlotBuilder):
         else:
             self.axes.bar(x, plot_data)
 
+        self.axes.set_ylabel("m", loc='top', fontsize=14, rotation=0)
+
 
 class MarigramsPlotBuilder(PlotBuilder):
     def __init__(self, xs, plot_data, coordinates, save_data_callback):
@@ -235,9 +237,11 @@ class MarigramsPlotBuilder(PlotBuilder):
 
         if n_marigrams == 1:
             self.axes.set_xlabel("s", loc='right')
+            self.axes.set_ylabel("m", loc='top', fontsize=14, rotation=0)
         else:
             self.axes[-1].set_xlabel("s", loc='right')
             self.axes[-1].spines['bottom'].set_visible(True)
+            self.axes[0].set_ylabel("m", loc='top', fontsize=14, rotation=0)
 
         self.figure.subplots_adjust(right=0.83)
 

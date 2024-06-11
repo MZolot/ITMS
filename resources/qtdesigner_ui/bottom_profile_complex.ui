@@ -139,7 +139,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Segment length</string>
+            <string>Segment length (steps)</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>

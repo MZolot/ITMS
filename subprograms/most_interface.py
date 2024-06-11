@@ -60,7 +60,7 @@ class MOSTInterface(SubprogramInterface):
 
     def set_bottom_profile(self, bottom_profile):
         self.bottom_profile = bottom_profile
-        # Might add area size adjustments here
+        self.ini_data_elements["y-size"].set_current_value(len(bottom_profile))
 
     def load_initial_data(self, config_file_name):
         super().load_initial_data(config_file_name)
@@ -105,6 +105,7 @@ class MOSTInterface(SubprogramInterface):
             self.print_scaled_static()
             static_x = int(self.static.ini_data_elements["M1"].get_current_value() * self.x_multiplier)
             static_y = int(self.static.ini_data_elements["N1"].get_current_value() * self.y_multiplier)
+            self.ini_data_elements["max elevation"].reset_value()
         else:
             static_x = 0
             static_y = 0
@@ -211,9 +212,11 @@ class MOSTInterface(SubprogramInterface):
     def update_progress(self):
         data = self.process.readAllStandardOutput()
         stdout = bytes(data).decode("utf8").strip()
-        if stdout != '':
+        try:
             self.steps_calculated = int(stdout)
-            self.calculation_screen.update_progress_bar(self.steps_calculated)
+        except ValueError:
+            return
+        self.calculation_screen.update_progress_bar(self.steps_calculated)
 
     def get_calculation_screen(self):
         steps = self.ini_data_elements["number of time steps"].get_current_value()
